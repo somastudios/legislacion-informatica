@@ -1,133 +1,64 @@
-import gsap from 'gsap'
 import './styles/main.css'
+import './styles/app.css'
 import './styles/scenes.css'
-import { createDeck } from './core/deck.js'
-import { createDot } from './core/dot.js'
-import { createHud } from './core/hud.js'
+import { loadMe, me, sb } from './lib/api.js'
+import { go, toast } from './lib/ui.js'
+import { login, join, recover } from './app/auth.js'
+import { home } from './app/home.js'
+import { activity } from './app/activity.js'
+import { work } from './app/work.js'
+import { admin } from './app/admin.js'
 
-import { C } from './content/es.js'
-import portada from './scenes/00-portada.js'
-import actividades from './scenes/01-actividades.js'
+// Dos modos en la misma página: el taller (subir y organizar) y la presentación (#/ver).
+const routes = [
+  { re: /^\/entrar$/, view: login, open: true },
+  { re: /^\/unirse\/([^/]+)$/, view: join, open: true },
+  { re: /^\/recuperar$/, view: recover, open: true },
+  { re: /^\/$/, view: home },
+  { re: /^\/a\/([^/]+)$/, view: activity },
+  { re: /^\/t\/([^/]+)$/, view: work },
+  { re: /^\/admin(?:\/(\w+))?$/, view: admin },
+  { re: /^\/ver(?:\/([^/]+))?$/, view: (root, slug) => import('./show/show.js').then((m) => m.show(root, slug)) },
+]
 
-const scenes = [portada, actividades]
-const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-// Con movimiento reducido las animaciones internas se resuelven al instante.
-if (reduced) gsap.globalTimeline.timeScale(40)
+const root = document.getElementById('app')
+let cleanup = null
+let seq = 0
 
-const stage = document.getElementById('stage')
-const band = document.getElementById('band')
-stage.appendChild(band)
-
-const dot = createDot(document.getElementById('dot'))
-const hud = createHud({ root: document.getElementById('hud'), menuEl: document.getElementById('menu'), dot, scenes, reduced })
-
-const deck = createDeck({
-  stage,
-  band,
-  dot,
-  scenes,
-  reduced,
-  onChange(i, from, dir) {
-    hud.update(i, from, dir)
-    history.replaceState(null, '', `#/${i}`)
-    document.title = i === 0 ? C.title : `${scenes[i].title} · ${C.title}`
-  },
-})
-hud.bind(deck)
-
-const fromHash = () => {
-  const m = location.hash.match(/^#\/?(\d+)$/)
-  return m ? Math.min(scenes.length - 1, +m[1]) : 0
+async function render() {
+  const path = location.hash.replace(/^#/, '') || '/'
+  const n = ++seq
+  let hit = null
+  const route = routes.find((r) => (hit = path.match(r.re)))
+  if (!route) return go('/')
+  if (!route.open && !me.user) {
+    sessionStorage.setItem('liia.next', path)
+    return go('/entrar')
+  }
+  try {
+    cleanup?.()
+  } catch (e) {
+    console.error(e)
+  }
+  cleanup = null
+  scrollTo(0, 0)
+  try {
+    const c = await route.view(root, ...hit.slice(1).map((v) => (v === undefined ? v : decodeURIComponent(v))))
+    if (n !== seq) return c?.()
+    cleanup = typeof c === 'function' ? c : null
+  } catch (e) {
+    console.error(e)
+    toast(e.message || 'No se pudo cargar la página.', 'error')
+  }
 }
 
-// ── Acciones declaradas en el marcado (data-act) ──
-document.addEventListener('click', (e) => {
-  const b = e.target.closest('[data-act]')
-  if (!b) return
-  const act = b.dataset.act
-  if (act === 'menu') return hud.toggle()
-  if (hud.isOpen) return act === 'home' ? hud.close(0) : undefined
-  if (act === 'next') deck.next()
-  else if (act === 'prev') deck.prev()
-  else if (act === 'home') deck.go(0)
+addEventListener('hashchange', render)
+sb.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT' && !/^#\/(entrar|unirse|recuperar)/.test(location.hash)) go('/entrar')
 })
 
-// ── Teclado: ← → cambian de capítulo, ↑ ↓ actúan dentro de la escena ──
-function fullscreen() {
-  if (document.fullscreenElement) document.exitFullscreen?.()
-  else document.documentElement.requestFullscreen?.().catch(() => {})
-}
-
-addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return
-  const k = e.key
-  if (hud.isOpen) return hud.key(e)
-  if (k === 'm' || k === 'M') return hud.open()
-  if (k === 'f' || k === 'F') return fullscreen()
-  if (deck.key(e)) return e.preventDefault()
-  const onControl = e.target instanceof Element && e.target.closest('button, a, input')
-  if (k === 'ArrowRight' || k === 'PageDown') deck.next()
-  else if (k === 'ArrowLeft' || k === 'PageUp') deck.prev()
-  else if (k === ' ' || k === 'Enter') {
-    if (onControl) return
-    e.shiftKey ? deck.prev() : deck.next()
-  } else if (k === 'Home') deck.go(0)
-  else if (k === 'End') deck.go(scenes.length - 1)
-  else if (/^[0-9]$/.test(k) && +k < scenes.length) deck.go(+k)
-  else return
-  e.preventDefault()
-})
-
-// ── Rueda: un gesto, un capítulo (la inercia del trackpad no cuenta) ──
-let wheelAt = 0
-let wheelLock = 0
-addEventListener(
-  'wheel',
-  (e) => {
-    const now = performance.now()
-    const fresh = now - wheelAt > 160
-    wheelAt = now
-    if (!fresh || now < wheelLock || hud.isOpen || Math.abs(e.deltaY) < 6) return
-    wheelLock = now + 700
-    e.deltaY > 0 ? deck.next() : deck.prev()
-  },
-  { passive: true },
-)
-
-// ── Táctil: deslizar en horizontal ──
-let touch = null
-addEventListener('pointerdown', (e) => {
-  touch = e.pointerType === 'touch' ? { x: e.clientX, y: e.clientY, id: e.pointerId } : null
-})
-addEventListener('pointerup', (e) => {
-  if (!touch || e.pointerId !== touch.id || hud.isOpen) return
-  const dx = e.clientX - touch.x
-  const dy = e.clientY - touch.y
-  touch = null
-  if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return
-  dx < 0 ? deck.next() : deck.prev()
-})
-
-// ── Cambio de tamaño: el punto vuelve a su ancla ──
-let raf = 0
-addEventListener('resize', () => {
-  cancelAnimationFrame(raf)
-  raf = requestAnimationFrame(() => {
-    deck.resize()
-    if (!deck.busy) dot.snap()
-  })
-})
-
-addEventListener('hashchange', () => {
-  const i = fromHash()
-  if (i !== deck.index && !hud.isOpen) deck.go(i)
-})
-
-// ── Arranque: con las fuentes listas, para que las medidas del punto sean exactas ──
 const fonts = document.fonts
-  ? Promise.all([document.fonts.load('800 16px Archivo'), document.fonts.load('500 16px "Martian Mono"')])
-      .then(() => document.fonts.ready)
-      .catch(() => {})
+  ? Promise.all([document.fonts.load('800 16px Archivo'), document.fonts.load('500 16px "Martian Mono"')]).catch(() => {})
   : Promise.resolve()
 
-fonts.then(() => deck.go(fromHash()))
+Promise.all([loadMe(), fonts]).then(render)

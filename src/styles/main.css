@@ -69,8 +69,9 @@
 
 /* ───────────────────────── Base ───────────────────────── */
 
-html,
-body {
+/* El modo presentación (html.is-show) fija la página; el taller hace scroll normal. */
+html.is-show,
+html.is-show body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
@@ -79,13 +80,16 @@ body {
 
 body {
   font-family: var(--font-sans);
-  font-size: var(--fs-body);
   font-optical-sizing: auto;
   font-kerning: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   -webkit-tap-highlight-color: transparent;
+}
+
+html.is-show body {
+  font-size: var(--fs-body);
   user-select: none;
   touch-action: none;
 }

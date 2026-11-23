@@ -1,5 +1,4 @@
-// Todo el texto de la presentación vive aquí.
-// Para cambiar una frase no hace falta tocar ninguna escena.
+// Textos fijos de la presentación. Lo demás (generación, actividades, trabajos) viene de la base de datos.
 
 export const C = {
   title: 'Legislación Informática',
@@ -10,28 +9,31 @@ export const C = {
     close: 'Cerrar',
     prev: 'Anterior',
     next: 'Siguiente',
-    hintKeys: 'Flechas para avanzar · M abre el índice',
+    exit: 'Salir',
+    hintKeys: '← → avanzan · ↑ ↓ cambian de página · M abre el índice',
     hintTouch: 'Deslice para avanzar',
   },
-
-  s0: {
+  cover: {
     nav: 'Portada',
-    kicker: 'Compendio de grupo · Generación 2026',
-    title: ['Legislación', 'Informática'],
-    sub: 'Todo lo que hicimos en el semestre, reunido en un solo lugar.',
+    kicker: 'Compendio de grupo',
     cta: 'Comenzar',
   },
-
-  s1: {
+  index: {
     nav: 'Actividades',
-    title: ['Cinco', 'entregas'],
     label: 'Lo que reúne este compendio',
-    items: [
-      { kind: 'Propuesta', name: 'Política de privacidad en México frente al uso de inteligencia artificial' },
-      { kind: 'Cartel', name: 'Cartel expositivo de la propuesta de política de privacidad en IA' },
-      { kind: 'Análisis', name: 'Recomendación sobre la ética de la inteligencia artificial' },
-      { kind: 'Video', name: 'Código ético y legal para la IA' },
-      { kind: 'Regulación', name: 'Regulación de la inteligencia artificial en sectores específicos' },
-    ],
+  },
+  work: {
+    credits: 'Créditos',
+    leader: 'Líder',
+    team: 'Equipo',
+    open: 'Abrir archivo',
+    back: 'Ver todos',
+    empty: 'Aún no hay trabajos en esta actividad.',
+  },
+  credits: {
+    nav: 'Créditos',
+    label: 'Quienes lo hicieron',
+    teacher: 'Docente',
+    again: 'Volver al inicio',
   },
 }
