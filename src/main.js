@@ -61,4 +61,7 @@ const fonts = document.fonts
   ? Promise.all([document.fonts.load('800 16px Archivo'), document.fonts.load('500 16px "Martian Mono"')]).catch(() => {})
   : Promise.resolve()
 
+// La demostración sustituye a Supabase por datos locales (solo con VITE_DEMO=1).
+if (import.meta.env.VITE_DEMO) await import('./demo/mock.js')
+
 Promise.all([loadMe(), fonts]).then(render)

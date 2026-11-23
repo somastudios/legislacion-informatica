@@ -27,6 +27,7 @@ export const C = {
     leader: 'Líder',
     team: 'Equipo',
     open: 'Abrir archivo',
+    missing: 'Esta pieza no está disponible aquí',
     back: 'Ver todos',
     empty: 'Aún no hay trabajos en esta actividad.',
   },

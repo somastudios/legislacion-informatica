@@ -118,7 +118,9 @@ export const shortName = (p) => {
 const urls = new Map()
 export async function signedUrls(paths) {
   const need = [...new Set(paths.filter((p) => p && !urls.has(p)))]
-  if (need.length) {
+  const demo = globalThis.__LIIA_DEMO__
+  if (demo) for (const p of need) urls.set(p, demo.file(p) || '')
+  else if (need.length) {
     const { data } = await sb.storage.from(BUCKET).createSignedUrls(need, 6 * 3600)
     for (const r of data || []) if (r.signedUrl) urls.set(r.path, r.signedUrl)
   }

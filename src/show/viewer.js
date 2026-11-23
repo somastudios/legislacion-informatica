@@ -62,6 +62,12 @@ export function createViewer(host) {
     const mine = token
     const kind = viewerOf(asset)
     host.dataset.kind = kind
+    if (kind === 'youtube' && globalThis.__LIIA_DEMO__) {
+      // Dentro de la demostración no se pueden incrustar videos: se enlaza.
+      host.innerHTML = `<a class="mv-file" href="https://youtu.be/${encodeURIComponent(asset.yt_id)}" target="_blank" rel="noopener">Ver el video en YouTube</a>`
+      host.classList.add('is-ready')
+      return
+    }
     if (kind === 'youtube') {
       host.innerHTML = `<div class="mv-frame"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(asset.yt_id)}?rel=0" title="Video" allow="accelerometer; autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`
       host.classList.add('is-ready')
@@ -75,6 +81,11 @@ export function createViewer(host) {
     await signedUrls([asset.storage_path])
     if (mine !== token) return
     const url = urlOf(asset.storage_path)
+    if (!url) {
+      host.innerHTML = `<p class="mv-note t-label">${C.work.missing}</p>`
+      host.classList.add('is-ready')
+      return
+    }
     if (kind === 'image') {
       const img = new Image()
       img.className = 'mv-img'

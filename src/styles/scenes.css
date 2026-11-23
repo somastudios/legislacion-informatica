@@ -404,6 +404,10 @@
   font-weight: 600;
 }
 
+.mv-note {
+  color: var(--fg-2);
+}
+
 .wk-info {
   position: absolute;
   right: 0;
