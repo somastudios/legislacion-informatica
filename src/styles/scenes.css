@@ -1,0 +1,149 @@
+/* Composición de cada escena.
+   Horizontal por defecto (presupuesto: 92.8u × 43u, el caso 16:9);
+   en vertical cada escena se recompone, no se encoge. */
+
+.ln {
+  display: block;
+}
+
+/* ───────────────────────── 00 · Portada ───────────────────────── */
+
+.s0-kicker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--fg-2);
+}
+
+.s0-logo {
+  position: absolute;
+  right: calc(var(--u) * 3);
+  top: 50%;
+  width: calc(var(--u) * 34);
+  aspect-ratio: 1;
+  translate: 0 -50%;
+}
+
+.s0-logo svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.s0-ring {
+  stroke-width: 20.5;
+  stroke-linecap: butt;
+}
+
+.s0-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+}
+
+.s0-text {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.s0-h {
+  font-size: calc(var(--u) * 9.4);
+  font-weight: 900;
+}
+
+.s0-sub {
+  margin-top: calc(var(--u) * 2);
+  max-width: 30em;
+  color: var(--fg-2);
+}
+
+.s0-cta {
+  margin-top: calc(var(--u) * 3);
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .s0-logo {
+    right: auto;
+    left: 50%;
+    top: 26%;
+    width: calc(var(--u) * 24);
+    translate: -50% -50%;
+  }
+
+  .s0-h {
+    font-size: calc(var(--u) * 6.6);
+  }
+}
+
+/* ───────────────────────── 01 · Actividades ───────────────────────── */
+
+.s1-h {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-size: calc(var(--u) * 11);
+  font-weight: 900;
+}
+
+.s1-side {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: calc(var(--u) * 46);
+}
+
+.s1-label {
+  color: var(--fg-3);
+}
+
+.s1-list {
+  margin-top: calc(var(--u) * 1.4);
+  border-top: var(--stroke) solid var(--fg-4);
+}
+
+.s1-item {
+  display: grid;
+  grid-template-columns: calc(var(--u) * 3.4) calc(var(--u) * 9) 1fr;
+  align-items: baseline;
+  gap: calc(var(--u) * 0.8);
+  padding: calc(var(--u) * 1.25) 0;
+  border-bottom: var(--stroke) solid var(--fg-4);
+}
+
+.s1-num {
+  color: var(--color-blue);
+}
+
+.s1-kind {
+  color: var(--fg-2);
+}
+
+.s1-name {
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .s1-h {
+    font-size: calc(var(--u) * 7.4);
+  }
+
+  .s1-side {
+    left: 0;
+    width: auto;
+  }
+
+  .s1-item {
+    grid-template-columns: calc(var(--u) * 4) 1fr;
+  }
+
+  .s1-kind {
+    display: none;
+  }
+}
