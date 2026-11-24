@@ -1,13 +1,8 @@
 // Las escenas de la presentación se arman con los datos de la generación:
 // portada → índice → un capítulo por actividad (con sus trabajos adentro) → créditos.
 //
-// Guion de cámara:
-//   portada (azul)   el § se dibuja, el titular sube, el cursor se posa al final.
-//   → índice         barrido horizontal: una franja tinta cruza y deja el blanco.
-//   → capítulo 1     entrada: la cámara se mete en su fila del índice.
-//   → capítulo N     barrido horizontal entre tonos (tinta, azul, blanco).
-//   · un trabajo     su miniatura viaja y crece hasta volverse el visor.
-//   → créditos       barrido vertical, como cuando suben los créditos.
+// Tres tonos (azul, blanco, tinta) y una transición, el iris, que nace donde está el punto.
+// Dentro de un capítulo, la miniatura de cada trabajo viaja y crece hasta volverse el visor.
 import gsap from 'gsap'
 import { $, $$, pad, words, wordsDot, rise, fade, pop, draw } from '../core/fx.js'
 import { ringBtn } from '../icons/icons.js'
@@ -23,7 +18,7 @@ const count = (n, one, many) => `${n} ${n === 1 ? one : many}`
 const KIND = { pdf: 'Documento', image: 'Imagen', video: 'Video', youtube: 'Video', docx: 'Documento', link: 'Enlace', file: 'Archivo' }
 const TONES = ['ink', 'blue', 'paper']
 const w_ = (text) => words(esc(text))
-/** Tamaño del titular de capítulo según su largo, para que quepa en su columna con todo y cursor. */
+/** Tamaño del titular de capítulo según su largo, para que quepa en su columna con todo y punto. */
 const fit = (text) => (text.length <= 6 ? 6.8 : text.length <= 8 ? 5.8 : text.length <= 9 ? 5.3 : text.length <= 11 ? 4.5 : 3.8)
 
 /** Parte un texto en dos líneas parejas para un titular. */
@@ -42,7 +37,7 @@ function twoLines(text) {
   return [t.slice(0, best).join(' '), t.slice(best).join(' ')]
 }
 
-/** Titular en líneas; el cursor se posa al final de la última. */
+/** Titular en líneas; el punto se posa al final de la última. */
 const headline = (lines) => lines.map((l, i) => `<span class="ln">${i === lines.length - 1 ? wordsDot(esc(l)) : w_(l)}</span>`).join('')
 
 function thumb(work) {
@@ -86,7 +81,6 @@ const index = (data) => {
     id: 'indice',
     theme: 'paper',
     title: C.index.nav,
-    move: { type: 'wipe', axis: 'x' },
     html: () => `
       <div class="scene-inner s1">
         <h2 class="t-display s1-h">${headline([NUM[n] || String(n), n === 1 ? 'entrega' : 'entregas'])}</h2>
@@ -115,8 +109,6 @@ const index = (data) => {
       return {
         enter: tl,
         anchor: () => $(el, '.period'),
-        // La fila de la que nace (o a la que regresa) el capítulo `i`.
-        portal: (i) => $$(el, '.s1-item')[i - 2] || null,
       }
     },
   }
@@ -133,7 +125,6 @@ function chapter(data, a, i) {
     id: `act-${i + 1}`,
     theme: TONES[i % 3],
     title: a.label || a.title,
-    move: i === 0 ? { type: 'push' } : { type: 'wipe', axis: 'x' },
     html: () => `
       <div class="scene-inner ch" style="--cols:${cols};--rows:${Math.max(1, Math.ceil(n / cols))}">
         <div class="ch-view">
@@ -227,7 +218,7 @@ function chapter(data, a, i) {
             land()
           },
         })
-        // El ancla del cursor se mide en su sitio final, sin el desplazamiento de la entrada.
+        // El ancla del punto se mide en su sitio final, sin el desplazamiento de la entrada.
         const settle = () => {
           fill(k)
           gsap.set(wk, { autoAlpha: 1 })
@@ -235,7 +226,9 @@ function chapter(data, a, i) {
           land()
         }
         if (first) {
-          gsap.to(dot.el, { autoAlpha: 0, duration: 0.18 })
+          // El punto cruza hacia el título mientras la miniatura viaja al visor.
+          gsap.set(kids, { x: 0 })
+          dot.to($(el, '.wk-dot'), { duration: 0.9, ease: 'expo.inOut' })
           const src = cards[k].querySelector('.ch-thumb')
           const a0 = src.getBoundingClientRect()
           const b0 = media.getBoundingClientRect()
@@ -250,9 +243,8 @@ function chapter(data, a, i) {
           anim.to(cards, { autoAlpha: 0, scale: 0.94, duration: 0.4, ease: 'power2.in', stagger: { each: 0.015, from: k } }, 0)
           anim.to(side, { autoAlpha: 0, x: -30, duration: 0.4, ease: 'power2.in' }, 0)
           anim.add(() => {
-            settle()
-            dot.snap($(el, '.wk-dot'))
-            gsap.to(dot.el, { autoAlpha: 1, duration: 0.25, delay: 0.3 })
+            fill(k)
+            gsap.set(wk, { autoAlpha: 1 })
             gsap.set(view, { autoAlpha: 0 })
             gsap.set(src, { autoAlpha: 1 })
           }, ghost ? 0.86 : 0.42)
@@ -302,12 +294,11 @@ function chapter(data, a, i) {
           cur = -1
           busy = false
           viewer.clear()
-          gsap.set([view, side, dot.el], { autoAlpha: 1, x: 0 })
+          gsap.set([view, side], { autoAlpha: 1, x: 0 })
           gsap.set(wk, { autoAlpha: 0 })
           gsap.set($$(el, '.ch-thumb'), { autoAlpha: 1 })
         },
         leave() {
-          gsap.set(dot.el, { autoAlpha: 1 })
           dropGhost()
           viewer.clear()
         },
@@ -339,7 +330,6 @@ const credits = (data) => {
     id: 'creditos',
     theme: 'ink',
     title: C.credits.nav,
-    move: { type: 'wipe', axis: 'y' },
     html: () => `
       <div class="scene-inner cr">
         <div class="cr-side">
