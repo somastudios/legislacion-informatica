@@ -1,7 +1,7 @@
 // Una actividad: mi trabajo, subir, y todos los trabajos para decir «este es el mío».
 import { loadGen, me, rpc, workOf } from '../lib/api.js'
 import { confirmBox, esc, go, icon, pad, run, toast } from '../lib/ui.js'
-import { cover, dropzone, frame, hueOf, names, thumb, withThumbs } from './parts.js'
+import { cover, dropzone, frame, names, thumb, withThumbs } from './parts.js'
 
 export async function activity(root, id) {
   const main = frame(root, 'home')
@@ -16,8 +16,8 @@ export async function activity(root, id) {
 
     main.innerHTML = `
       <a class="crumb" href="#/">${icon.back} ${student ? 'Mis trabajos' : 'Actividades'}</a>
-      <header class="page-head" style="--hue:${hueOf(n - 1)}">
-        <p class="t-label"><span class="num">${pad(n)} · ${esc(act.label || act.kind)}</span></p>
+      <header class="page-head">
+        <p class="t-label"><span class="num">${pad(n)}</span> · ${esc(act.label || act.kind)}</p>
         <h1 class="h1">${esc(act.title)}</h1>
         ${act.description ? `<p class="lead">${esc(act.description)}</p>` : ''}
       </header>

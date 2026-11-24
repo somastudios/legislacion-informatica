@@ -5,8 +5,7 @@ import { titleFromFile, ytIds } from '../lib/match.js'
 import { loadGen, me, pickGen, rpc, sb, shortName, signOut, signedUrls, storePiece, urlOf, workOf, youtubePiece } from '../lib/api.js'
 import { dialog, esc, go, icon, toast } from '../lib/ui.js'
 
-/** Tono del espectro que le toca a una actividad según su lugar. */
-export const hueOf = (i) => `var(--c${(i % 5) + 1})`
+const MARK = `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="32" cy="32" r="9.500" fill="var(--color-blue)"/></svg>`
 
 /** Barra superior + contenedor. Devuelve el <main> donde pinta cada pantalla. */
 export function frame(root, active = '') {
@@ -14,7 +13,7 @@ export function frame(root, active = '') {
   root.innerHTML = `
     <div class="app">
       <header class="top">
-        <a class="brand" href="#/"><span class="mark">§</span><span>Compendio</span></a>
+        <a class="brand" href="#/">${MARK}<span><b>LIIA</b> Compendio</span></a>
         <nav class="top-nav">
           ${tab('/', me.person?.role === 'teacher' ? 'Actividades' : 'Mis trabajos', 'home')}
           ${me.isAdmin ? tab('/admin', 'Administración', 'admin') : ''}

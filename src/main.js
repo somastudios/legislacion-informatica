@@ -1,6 +1,6 @@
-import './styles/base.css'
+import './styles/main.css'
 import './styles/app.css'
-import './styles/show.css'
+import './styles/scenes.css'
 import { loadMe, me, sb } from './lib/api.js'
 import { go, toast } from './lib/ui.js'
 import { login, join, recover } from './app/auth.js'
@@ -24,7 +24,6 @@ const routes = [
 const root = document.getElementById('app')
 let cleanup = null
 let seq = 0
-let entering = 0
 
 async function render() {
   const path = location.hash.replace(/^#/, '') || '/'
@@ -43,10 +42,6 @@ async function render() {
   }
   cleanup = null
   scrollTo(0, 0)
-  // La entrada animada es solo al cambiar de pantalla, no en cada guardado.
-  root.classList.add('is-entering')
-  clearTimeout(entering)
-  entering = setTimeout(() => root.classList.remove('is-entering'), 1400)
   try {
     const c = await route.view(root, ...hit.slice(1).map((v) => (v === undefined ? v : decodeURIComponent(v))))
     if (n !== seq) return c?.()
@@ -63,7 +58,7 @@ sb.auth.onAuthStateChange((event) => {
 })
 
 const fonts = document.fonts
-  ? Promise.all([document.fonts.load('700 16px "Inter Variable"')]).catch(() => {})
+  ? Promise.all([document.fonts.load('800 16px Archivo'), document.fonts.load('500 16px "Martian Mono"')]).catch(() => {})
   : Promise.resolve()
 
 // La demostración sustituye a Supabase por datos locales (solo con VITE_DEMO=1).

@@ -1,26 +1,40 @@
-// Monta la presentación: capas, baraja, controles y gestos. Devuelve cómo desmontarla.
+// Monta la presentación: capas, baraja, punto, HUD y controles. Devuelve cómo desmontarla.
 import gsap from 'gsap'
+import { createDeck } from '../core/deck.js'
+import { createDot } from '../core/dot.js'
+import { createHud } from '../core/hud.js'
 import { C } from '../content/es.js'
-import { reducedMotion } from '../lib/fx.js'
-import { createDeck } from './deck.js'
-import { createHud } from './hud.js'
 
 export function mountShow(scenes, { title = C.title, onExit } = {}) {
-  const reduced = reducedMotion()
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
+  // Con movimiento reducido las animaciones internas se resuelven al instante.
+  gsap.globalTimeline.timeScale(reduced ? 40 : 1)
 
   const layer = document.createElement('div')
   layer.id = 'show'
   layer.innerHTML = `
     <main id="stage"></main>
-    <div id="menu" role="dialog" aria-modal="true" aria-label="${C.ui.index}" inert></div>
-    <div id="hud"></div>`
+    <div id="band" aria-hidden="true"></div>
+    <div id="menu" role="dialog" aria-modal="true" aria-label="${C.ui.index}" data-theme="ink" inert></div>
+    <div id="grain" aria-hidden="true"></div>
+    <div id="hud"></div>
+    <div id="dot" aria-hidden="true"></div>`
   document.body.appendChild(layer)
   document.documentElement.classList.add('is-show')
 
   const q = (id) => layer.querySelector(`#${id}`)
-  const hud = createHud({ root: q('hud'), menuEl: q('menu'), scenes, reduced })
+  const stage = q('stage')
+  const band = q('band')
+  stage.appendChild(band)
+
+  const dot = createDot(q('dot'))
+  const hud = createHud({ root: q('hud'), menuEl: q('menu'), dot, scenes, reduced })
+  q('hud').querySelector('.hud-menu').insertAdjacentHTML('beforebegin', `<button type="button" class="hud-exit t-label" data-act="exit">${C.ui.exit}</button>`)
+
   const deck = createDeck({
-    stage: q('stage'),
+    stage,
+    band,
+    dot,
     scenes,
     reduced,
     onChange(i, from, dir) {
@@ -45,7 +59,6 @@ export function mountShow(scenes, { title = C.title, onExit } = {}) {
     if (act === 'next') deck.next()
     else if (act === 'prev') deck.prev()
     else if (act === 'home') deck.go(0)
-    else if (act === 'go') deck.go(+b.dataset.to)
   })
 
   // ── Teclado: ← → cambian de trabajo o capítulo, ↑ ↓ actúan dentro de la escena ──
@@ -104,10 +117,14 @@ export function mountShow(scenes, { title = C.title, onExit } = {}) {
     dx < 0 ? deck.next() : deck.prev()
   })
 
+  // ── Cambio de tamaño: el punto vuelve a su ancla ──
   let raf = 0
   on(window, 'resize', () => {
     cancelAnimationFrame(raf)
-    raf = requestAnimationFrame(() => deck.resize())
+    raf = requestAnimationFrame(() => {
+      deck.resize()
+      if (!deck.busy) dot.snap()
+    })
   })
 
   deck.go(0)
@@ -115,7 +132,8 @@ export function mountShow(scenes, { title = C.title, onExit } = {}) {
   return () => {
     ctl.abort()
     cancelAnimationFrame(raf)
-    gsap.killTweensOf(layer.querySelectorAll('*'))
+    scenes.forEach((s) => s.destroy?.())
+    gsap.globalTimeline.timeScale(1)
     if (document.fullscreenElement) document.exitFullscreen?.()
     document.documentElement.classList.remove('is-show')
     document.title = title

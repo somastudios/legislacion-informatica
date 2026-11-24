@@ -1,6 +1,7 @@
 // Entrar, unirse con un enlace y recuperar contraseña.
 import gsap from 'gsap'
-import { words, reveal, fade } from '../lib/fx.js'
+import { boil, P } from '../core/boil.js'
+import { words, rise, fade } from '../core/fx.js'
 import { me, portal, signIn } from '../lib/api.js'
 import { esc, field, go, icon, run, toast } from '../lib/ui.js'
 
@@ -10,14 +11,16 @@ const afterLogin = () => {
   go(next && !next.startsWith('/entrar') ? next : '/')
 }
 
-/** Marco de dos paneles: la portada en negro con la aurora y el formulario al lado. */
+/** Marco de dos paneles: la portada en tinta y el formulario en papel. */
 function frame(root, { kicker, title, sub, form }) {
   root.innerHTML = `
     <div class="auth">
-      <aside class="auth-art">
-        <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
-        <span class="mark auth-mark">§</span>
-        <p class="t-label auth-k">Compendio de grupo</p>
+      <aside class="auth-art" data-theme="ink">
+        <p class="t-label auth-kicker">Legislación Informática · Compendio</p>
+        <div class="auth-logo" aria-hidden="true">
+          <svg viewBox="-100 -100 200 200">${boil(P.circle(0, 0, 89.75, 44), { amp: 0.42, cls: 'draw auth-ring' })}</svg>
+          <i class="auth-dot"></i>
+        </div>
         <h1 class="t-display auth-h"><span class="ln">${words('Legislación')}</span><span class="ln">${words('Informática')}</span></h1>
         <p class="auth-lema">Todo lo que hicimos en el semestre, reunido en un solo lugar.</p>
       </aside>
@@ -30,13 +33,11 @@ function frame(root, { kicker, title, sub, form }) {
         </div>
       </section>
     </div>`
-  const q = (sel) => root.querySelector(sel)
   const tl = gsap.timeline()
-  tl.fromTo(q('.aurora'), { autoAlpha: 0 }, { autoAlpha: 1, duration: 2.2, ease: 'power2.out' }, 0)
-  tl.fromTo(q('.auth-mark'), { autoAlpha: 0, scale: 0.4, rotate: -24 }, { autoAlpha: 1, scale: 1, rotate: 0, duration: 1.4, ease: 'elastic.out(1, 0.62)' }, 0.15)
-  reveal(tl, root.querySelectorAll('.auth-h .wi'), 0.35, { stagger: 0.12, duration: 1.3 })
-  fade(tl, [q('.auth-k'), q('.auth-lema')], 0.7)
-  fade(tl, [...q('.auth-card').children], 0.45, { stagger: 0.06, y: 20 })
+  tl.fromTo(root.querySelector('.auth-ring'), { '--draw': 1.06 }, { '--draw': 0, duration: 1.5, ease: 'expo.inOut' }, 0.1)
+  tl.fromTo(root.querySelector('.auth-dot'), { scale: 0 }, { scale: 1, duration: 0.9, ease: 'expo.out' }, 0.5)
+  rise(tl, root.querySelectorAll('.auth-h .wi'), 0.35, { stagger: 0.1, duration: 1.1 })
+  fade(tl, [root.querySelector('.auth-lema'), root.querySelector('.auth-card')], 0.7)
   return () => tl.kill()
 }
 

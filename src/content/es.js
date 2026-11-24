@@ -2,14 +2,15 @@
 
 export const C = {
   title: 'Legislación Informática',
-  brand: 'Compendio',
+  brand: 'LIIA',
+  studio: 'Compendio',
   ui: {
     index: 'Índice',
     close: 'Cerrar',
     prev: 'Anterior',
     next: 'Siguiente',
     exit: 'Salir',
-    hintKeys: '← → avanzan · ↑ ↓ página · M índice · F pantalla completa',
+    hintKeys: '← → avanzan · ↑ ↓ cambian de página · M abre el índice',
     hintTouch: 'Deslice para avanzar',
   },
   cover: {
