@@ -1,6 +1,6 @@
 // Entrar, unirse con un enlace y recuperar contraseña.
 import gsap from 'gsap'
-import { glyph } from '../icons/glyphs.js'
+import { boil, P } from '../core/boil.js'
 import { words, rise, fade } from '../core/fx.js'
 import { me, portal, signIn } from '../lib/api.js'
 import { esc, field, go, icon, run, toast } from '../lib/ui.js'
@@ -15,10 +15,13 @@ const afterLogin = () => {
 function frame(root, { kicker, title, sub, form }) {
   root.innerHTML = `
     <div class="auth">
-      <aside class="auth-art" data-theme="blue">
+      <aside class="auth-art" data-theme="ink">
         <p class="t-label auth-kicker">Legislación Informática · Compendio</p>
-        <div class="auth-mark" aria-hidden="true">${glyph('section', { width: 8.4, amp: 0.55 })}</div>
-        <h1 class="t-display auth-h"><span class="ln">${words('Legislación')}</span><span class="ln">${words('Informática')}<i class="pt auth-pt"></i></span></h1>
+        <div class="auth-logo" aria-hidden="true">
+          <svg viewBox="-100 -100 200 200">${boil(P.circle(0, 0, 89.75, 44), { amp: 0.42, cls: 'draw auth-ring' })}</svg>
+          <i class="auth-dot"></i>
+        </div>
+        <h1 class="t-display auth-h"><span class="ln">${words('Legislación')}</span><span class="ln">${words('Informática')}</span></h1>
         <p class="auth-lema">Todo lo que hicimos en el semestre, reunido en un solo lugar.</p>
       </aside>
       <section class="auth-panel">
@@ -31,8 +34,8 @@ function frame(root, { kicker, title, sub, form }) {
       </section>
     </div>`
   const tl = gsap.timeline()
-  tl.fromTo(root.querySelector('.auth-mark .boil'), { '--draw': 1.06 }, { '--draw': 0, duration: 2, ease: 'power2.inOut' }, 0.1)
-  tl.fromTo(root.querySelector('.auth-pt'), { scaleY: 0, transformOrigin: '50% 100%' }, { scaleY: 1, duration: 0.6, ease: 'expo.out' }, 1.2)
+  tl.fromTo(root.querySelector('.auth-ring'), { '--draw': 1.06 }, { '--draw': 0, duration: 1.5, ease: 'expo.inOut' }, 0.1)
+  tl.fromTo(root.querySelector('.auth-dot'), { scale: 0 }, { scale: 1, duration: 0.9, ease: 'expo.out' }, 0.5)
   rise(tl, root.querySelectorAll('.auth-h .wi'), 0.35, { stagger: 0.1, duration: 1.1 })
   fade(tl, [root.querySelector('.auth-lema'), root.querySelector('.auth-card')], 0.7)
   return () => tl.kill()

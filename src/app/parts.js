@@ -4,9 +4,8 @@ import { analyze } from '../lib/files.js'
 import { titleFromFile, ytIds } from '../lib/match.js'
 import { loadGen, me, pickGen, rpc, sb, shortName, signOut, signedUrls, storePiece, urlOf, workOf, youtubePiece } from '../lib/api.js'
 import { dialog, esc, go, icon, toast } from '../lib/ui.js'
-import { glyph, glyphFor } from '../icons/glyphs.js'
 
-const MARK = `<span class="mk" aria-hidden="true">${glyph('section', { width: 11, amp: 0.4 })}<i></i></span>`
+const MARK = `<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="32" cy="32" r="9.500" fill="var(--color-blue)"/></svg>`
 
 /** Barra superior + contenedor. Devuelve el <main> donde pinta cada pantalla. */
 export function frame(root, active = '') {
@@ -44,8 +43,8 @@ export const names = (work, max = 6) => {
 }
 
 /** Miniatura de una pieza. */
-export function thumb(asset, cls = '', activity = null) {
-  if (!asset) return `<span class="thumb is-empty ${cls}">${activity ? glyph(glyphFor(activity), { width: 6 }) : icon.file}</span>`
+export function thumb(asset, cls = '') {
+  if (!asset) return `<span class="thumb is-empty ${cls}">${icon.file}</span>`
   if (asset.kind === 'youtube')
     return `<span class="thumb is-video ${cls}"><img src="https://i.ytimg.com/vi/${esc(asset.yt_id)}/hqdefault.jpg" alt="" loading="lazy" /><i>${icon.play}</i></span>`
   const src = urlOf(asset.thumb_path)

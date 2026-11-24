@@ -1,17 +1,9 @@
 // Las escenas de la presentación se arman con los datos de la generación:
 // portada → índice → un capítulo por actividad (con sus trabajos adentro) → créditos.
-//
-// Guion de cámara:
-//   portada (azul)   el § se dibuja, el titular sube, el cursor se posa al final.
-//   → índice         barrido horizontal: una franja tinta cruza y deja el blanco.
-//   → capítulo 1     entrada: la cámara se mete en su fila del índice.
-//   → capítulo N     barrido horizontal entre tonos (tinta, azul, blanco).
-//   · un trabajo     su miniatura viaja y crece hasta volverse el visor.
-//   → créditos       barrido vertical, como cuando suben los créditos.
 import gsap from 'gsap'
-import { $, $$, pad, words, wordsDot, rise, fade, pop, draw } from '../core/fx.js'
+import { boil, P } from '../core/boil.js'
+import { $, $$, pad, words, wordsDot, rise, fade, pop } from '../core/fx.js'
 import { ringBtn } from '../icons/icons.js'
-import { glyph, glyphFor } from '../icons/glyphs.js'
 import { C } from '../content/es.js'
 import { shortName, urlOf } from '../lib/api.js'
 import { viewerOf } from '../lib/files.js'
@@ -21,10 +13,7 @@ import { createViewer } from './viewer.js'
 const NUM = ['Cero', 'Una', 'Dos', 'Tres', 'Cuatro', 'Cinco', 'Seis', 'Siete', 'Ocho', 'Nueve', 'Diez']
 const count = (n, one, many) => `${n} ${n === 1 ? one : many}`
 const KIND = { pdf: 'Documento', image: 'Imagen', video: 'Video', youtube: 'Video', docx: 'Documento', link: 'Enlace', file: 'Archivo' }
-const TONES = ['ink', 'blue', 'paper']
 const w_ = (text) => words(esc(text))
-/** Tamaño del titular de capítulo según su largo, para que quepa en su columna con todo y cursor. */
-const fit = (text) => (text.length <= 6 ? 6.8 : text.length <= 8 ? 5.8 : text.length <= 9 ? 5.3 : text.length <= 11 ? 4.5 : 3.8)
 
 /** Parte un texto en dos líneas parejas para un titular. */
 function twoLines(text) {
@@ -42,7 +31,6 @@ function twoLines(text) {
   return [t.slice(0, best).join(' '), t.slice(best).join(' ')]
 }
 
-/** Titular en líneas; el cursor se posa al final de la última. */
 const headline = (lines) => lines.map((l, i) => `<span class="ln">${i === lines.length - 1 ? wordsDot(esc(l)) : w_(l)}</span>`).join('')
 
 function thumb(work) {
@@ -56,25 +44,27 @@ function thumb(work) {
 
 const cover = (data) => ({
   id: 'portada',
-  theme: 'blue',
+  theme: 'ink',
   title: C.cover.nav,
   html: () => `
     <div class="scene-inner s0">
       <p class="t-label s0-kicker">${C.cover.kicker} · ${esc(data.gen.name)}</p>
-      <div class="s0-mark" aria-hidden="true">${glyph('section', { width: 8.4, amp: 0.55 })}</div>
+      <div class="s0-logo" aria-hidden="true">
+        <svg viewBox="-100 -100 200 200">${boil(P.circle(0, 0, 89.75, 44), { amp: 0.42, cls: 'draw s0-ring' })}</svg>
+        <i class="s0-dot" data-dot></i>
+      </div>
       <div class="s0-text">
-        <h1 class="t-display s0-h">${headline(twoLines(data.gen.subject))}</h1>
+        <h1 class="t-display s0-h">${twoLines(data.gen.subject).map((l) => `<span class="ln">${w_(l)}</span>`).join('')}</h1>
         ${data.gen.tagline ? `<p class="t-body s0-sub">${esc(data.gen.tagline)}</p>` : ''}
         ${ringBtn(C.cover.cta, { act: 'next', cls: 's0-cta' })}
       </div>
     </div>`,
   setup(el) {
     const tl = gsap.timeline({ paused: true })
-    draw(tl, $(el, '.s0-mark .boil'), 0.1, { duration: 2.2, ease: 'power2.inOut' })
-    tl.fromTo($(el, '.s0-mark'), { rotate: -8, scale: 0.92 }, { rotate: 0, scale: 1, duration: 2.4, ease: 'expo.out' }, 0.1)
-    rise(tl, $$(el, '.s0-h .wi'), 0.5, { stagger: 0.12, duration: 1.25 })
-    fade(tl, [$(el, '.s0-kicker'), $(el, '.s0-sub'), $(el, '.s0-cta')].filter(Boolean), 1.15)
-    return { enter: tl, anchor: () => $(el, '.period') }
+    tl.fromTo($(el, '.s0-ring'), { '--draw': 1.06 }, { '--draw': 0, duration: 1.7, ease: 'expo.inOut' }, 0.15)
+    rise(tl, $$(el, '.s0-h .wi'), 0.55, { stagger: 0.12, duration: 1.25 })
+    fade(tl, [$(el, '.s0-kicker'), $(el, '.s0-sub'), $(el, '.s0-cta')].filter(Boolean), 1.2)
+    return { enter: tl, anchor: () => $(el, '.s0-dot') }
   },
 })
 
@@ -86,7 +76,6 @@ const index = (data) => {
     id: 'indice',
     theme: 'paper',
     title: C.index.nav,
-    move: { type: 'wipe', axis: 'x' },
     html: () => `
       <div class="scene-inner s1">
         <h2 class="t-display s1-h">${headline([NUM[n] || String(n), n === 1 ? 'entrega' : 'entregas'])}</h2>
@@ -97,8 +86,8 @@ const index = (data) => {
               .map(
                 (a, i) => `<li class="s1-item">
                   <span class="t-label s1-num">${pad(i + 1)}</span>
-                  <span class="s1-ico">${glyph(glyphFor(a), { width: 6.5 })}</span>
-                  <span class="s1-name"><b class="t-name">${esc(a.label || a.kind)}</b>${esc(a.title)}</span>
+                  <span class="t-label s1-kind">${esc(a.label || a.kind)}</span>
+                  <span class="s1-name">${esc(a.title)}</span>
                   <span class="t-label s1-count">${count(a.works.length, 'equipo', 'equipos')}</span>
                 </li>`,
               )
@@ -110,14 +99,8 @@ const index = (data) => {
       const tl = gsap.timeline({ paused: true })
       rise(tl, $$(el, '.s1-h .wi'), 0, { stagger: 0.09, duration: 1.2 })
       fade(tl, $(el, '.s1-label'), 0.4)
-      fade(tl, $$(el, '.s1-item'), 0.5, { stagger: 0.1 })
-      draw(tl, $$(el, '.s1-ico .boil'), 0.65, { stagger: 0.1, duration: 0.9 })
-      return {
-        enter: tl,
-        anchor: () => $(el, '.period'),
-        // La fila de la que nace (o a la que regresa) el capítulo `i`.
-        portal: (i) => $$(el, '.s1-item')[i - 2] || null,
-      }
+      fade(tl, $$(el, '.s1-item'), 0.55, { stagger: 0.09 })
+      return { enter: tl, anchor: () => $(el, '.period') }
     },
   }
 }
@@ -131,18 +114,16 @@ function chapter(data, a, i) {
   const cols = n <= 4 ? 2 : n <= 9 ? 3 : n <= 12 ? 4 : n <= 15 ? 5 : 6
   return {
     id: `act-${i + 1}`,
-    theme: TONES[i % 3],
+    theme: i % 2 ? 'paper' : 'ink',
     title: a.label || a.title,
-    move: i === 0 ? { type: 'push' } : { type: 'wipe', axis: 'x' },
     html: () => `
-      <div class="scene-inner ch" style="--cols:${cols};--rows:${Math.max(1, Math.ceil(n / cols))}">
+      <div class="scene-inner ch" style="--cols:${cols};--rows:${Math.max(1, Math.ceil(works.length / cols))}">
         <div class="ch-view">
           <div class="ch-side">
             <p class="t-label ch-k"><b>${pad(i + 1)}</b> / ${pad(data.activities.length)}</p>
-            <span class="ch-ico">${glyph(glyphFor(a), { width: 4.6 })}</span>
-            <h2 class="t-display ch-h" style="--fs:${fit(a.label || a.kind)}">${headline([a.label || a.kind])}</h2>
+            <h2 class="t-display ch-h">${headline([a.label || a.kind])}</h2>
             <p class="t-name ch-title">${esc(a.title)}</p>
-            <p class="t-label ch-meta">${n ? `${count(n, 'equipo', 'equipos')} · ${count(people, 'persona', 'personas')}` : C.work.empty}</p>
+            <p class="t-label ch-meta">${works.length ? `${count(works.length, 'equipo', 'equipos')} · ${count(people, 'persona', 'personas')}` : C.work.empty}</p>
           </div>
           <div class="ch-cards">
             ${works
@@ -169,24 +150,20 @@ function chapter(data, a, i) {
           </div>
         </div>
       </div>`,
-    setup(el, { dot, reduced }) {
+    setup(el, { dot }) {
       const view = $(el, '.ch-view')
       const wk = $(el, '.wk')
       const media = $(el, '.wk-media')
       const info = $(el, '.wk-info')
-      const side = $(el, '.ch-side')
-      const cards = $$(el, '.ch-card')
       const viewer = createViewer(media)
       let cur = -1
       let busy = false
       let anim = null
-      let ghost = null
 
       const tl = gsap.timeline({ paused: true })
       rise(tl, $$(el, '.ch-h .wi'), 0, { duration: 1.2 })
-      draw(tl, $(el, '.ch-ico .boil'), 0.15, { duration: 1.5 })
       fade(tl, [$(el, '.ch-k'), $(el, '.ch-title'), $(el, '.ch-meta')], 0.3)
-      if (n) pop(tl, cards, 0.4, { from: 0.9, stagger: 0.045 })
+      if (works.length) pop(tl, $$(el, '.ch-card'), 0.45, { from: 0.9, stagger: 0.045 })
 
       function showPiece(w, j) {
         $$(el, '.wk-pieces button').forEach((b, k) => b.classList.toggle('is-on', k === j))
@@ -195,7 +172,7 @@ function chapter(data, a, i) {
 
       function fill(k) {
         const w = works[k]
-        $(el, '.wk-k').innerHTML = `<b>${esc(a.label || a.kind)}</b> · ${C.work.team} ${pad(k + 1)} / ${pad(n)}`
+        $(el, '.wk-k').innerHTML = `<b>${esc(a.label || a.kind)}</b> · ${C.work.team} ${pad(k + 1)} / ${pad(works.length)}`
         $(el, '[data-title]').textContent = w.title
         $(el, '.wk-sum').textContent = w.summary || ''
         $(el, '.wk-sum').hidden = !w.summary
@@ -208,63 +185,31 @@ function chapter(data, a, i) {
         showPiece(w, 0)
       }
 
-      const dropGhost = () => {
-        ghost?.remove()
-        ghost = null
-      }
-      const land = () => dot.to($(el, '.wk-dot'), { duration: 0.8, ease: 'expo.out' })
-
-      /** Abre un trabajo. Desde la cuadrícula, su miniatura viaja y crece hasta ocupar el visor. */
       function open(k, dir = 1) {
-        if (busy || k < 0 || k >= n) return true
+        if (busy || k < 0 || k >= works.length) return true
         busy = true
         const first = cur < 0
         cur = k
         const kids = [...info.children]
+        const land = () => dot.to($(el, '.wk-dot'), { duration: 0.7, ease: 'expo.out' })
         anim = gsap.timeline({
           onComplete() {
             busy = false
             land()
           },
         })
-        // El ancla del cursor se mide en su sitio final, sin el desplazamiento de la entrada.
-        const settle = () => {
+        if (first) anim.to(view, { autoAlpha: 0, duration: 0.3, ease: 'power2.in' })
+        else anim.to([media, ...kids], { autoAlpha: 0, x: -18 * dir, duration: 0.22, ease: 'power2.in' })
+        anim.add(() => {
           fill(k)
           gsap.set(wk, { autoAlpha: 1 })
+          gsap.set(view, { autoAlpha: 0 })
+          // El ancla se mide en su sitio final, sin el desplazamiento de la entrada.
           gsap.set(kids, { x: 0 })
           land()
-        }
-        if (first) {
-          gsap.to(dot.el, { autoAlpha: 0, duration: 0.18 })
-          const src = cards[k].querySelector('.ch-thumb')
-          const a0 = src.getBoundingClientRect()
-          const b0 = media.getBoundingClientRect()
-          if (!reduced && a0.width) {
-            ghost = src.cloneNode(true)
-            ghost.classList.add('ch-ghost')
-            Object.assign(ghost.style, { left: `${a0.left}px`, top: `${a0.top}px`, width: `${a0.width}px`, height: `${a0.height}px` })
-            el.appendChild(ghost)
-            gsap.set(src, { autoAlpha: 0 })
-            anim.to(ghost, { left: b0.left, top: b0.top, width: b0.width, height: b0.height, borderRadius: getComputedStyle(media).borderRadius, duration: 0.9, ease: 'expo.inOut' }, 0)
-          }
-          anim.to(cards, { autoAlpha: 0, scale: 0.94, duration: 0.4, ease: 'power2.in', stagger: { each: 0.015, from: k } }, 0)
-          anim.to(side, { autoAlpha: 0, x: -30, duration: 0.4, ease: 'power2.in' }, 0)
-          anim.add(() => {
-            settle()
-            dot.snap($(el, '.wk-dot'))
-            gsap.to(dot.el, { autoAlpha: 1, duration: 0.25, delay: 0.3 })
-            gsap.set(view, { autoAlpha: 0 })
-            gsap.set(src, { autoAlpha: 1 })
-          }, ghost ? 0.86 : 0.42)
-          anim.fromTo(media, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: 'power2.out' })
-          if (ghost) anim.to(ghost, { autoAlpha: 0, duration: 0.45, ease: 'power2.out', onComplete: dropGhost }, '<')
-          anim.fromTo(kids, { autoAlpha: 0, x: 34 }, { autoAlpha: 1, x: 0, duration: 0.85, ease: 'expo.out', stagger: 0.055 }, '<')
-        } else {
-          anim.to([media, ...kids], { autoAlpha: 0, x: -26 * dir, duration: 0.24, ease: 'power2.in', stagger: 0.012 })
-          anim.add(settle)
-          anim.fromTo(media, { autoAlpha: 0, x: 48 * dir, scale: 0.985 }, { autoAlpha: 1, x: 0, scale: 1, duration: 0.8, ease: 'expo.out' })
-          anim.fromTo(kids, { autoAlpha: 0, x: 30 * dir }, { autoAlpha: 1, x: 0, duration: 0.75, ease: 'expo.out', stagger: 0.045 }, '<0.06')
-        }
+        })
+        anim.fromTo(media, { autoAlpha: 0, x: 0, scale: 0.97 }, { autoAlpha: 1, scale: 1, duration: 0.8, ease: 'expo.out' })
+        anim.fromTo(kids, { autoAlpha: 0, x: 22 * dir }, { autoAlpha: 1, x: 0, duration: 0.7, ease: 'expo.out', stagger: 0.04 }, '<0.05')
         return true
       }
 
@@ -277,11 +222,9 @@ function chapter(data, a, i) {
           .to(wk, { autoAlpha: 0, duration: 0.3, ease: 'power2.in' })
           .add(() => {
             viewer.clear()
-            gsap.set(view, { autoAlpha: 1 })
-            dot.to($(el, '.period'), { duration: 0.9, ease: 'expo.out' })
+            dot.to($(el, '.period'), { duration: 0.8, ease: 'expo.out' })
           })
-          .fromTo(side, { autoAlpha: 0, x: -30 }, { autoAlpha: 1, x: 0, duration: 0.7, ease: 'expo.out' })
-          .fromTo(cards, { autoAlpha: 0, scale: 0.94 }, { autoAlpha: 1, scale: 1, duration: 0.6, ease: 'expo.out', stagger: 0.025 }, '<')
+          .to(view, { autoAlpha: 1, duration: 0.5, ease: 'power2.out' })
         return true
       }
 
@@ -298,20 +241,14 @@ function chapter(data, a, i) {
         anchor: () => (cur >= 0 ? $(el, '.wk-dot') : $(el, '.period')),
         reset() {
           anim?.kill()
-          dropGhost()
           cur = -1
           busy = false
           viewer.clear()
-          gsap.set([view, side, dot.el], { autoAlpha: 1, x: 0 })
+          gsap.set(view, { autoAlpha: 1 })
           gsap.set(wk, { autoAlpha: 0 })
-          gsap.set($$(el, '.ch-thumb'), { autoAlpha: 1 })
         },
-        leave() {
-          gsap.set(dot.el, { autoAlpha: 1 })
-          dropGhost()
-          viewer.clear()
-        },
-        next: () => (busy ? true : cur < n - 1 ? open(cur + 1, 1) : false),
+        leave: () => viewer.clear(),
+        next: () => (busy ? true : cur < works.length - 1 ? open(cur + 1, 1) : false),
         prev: () => (busy ? true : cur > 0 ? open(cur - 1, -1) : cur === 0 ? close() : false),
         resize: () => viewer.resize(),
         key(e) {
@@ -339,11 +276,9 @@ const credits = (data) => {
     id: 'creditos',
     theme: 'ink',
     title: C.credits.nav,
-    move: { type: 'wipe', axis: 'y' },
     html: () => `
       <div class="scene-inner cr">
         <div class="cr-side">
-          <span class="cr-ico">${glyph('balanza', { width: 3.6 })}</span>
           <h2 class="t-display cr-h">${headline(twoLines(data.gen.name))}</h2>
           <p class="t-body cr-sub">${esc(data.gen.subject)}</p>
           ${teachers.length ? `<p class="t-label cr-teacher">${C.credits.teacher} · <b>${esc(teachers.map((t) => t.full_name).join(', '))}</b></p>` : ''}
@@ -357,9 +292,8 @@ const credits = (data) => {
     setup(el) {
       const tl = gsap.timeline({ paused: true })
       rise(tl, $$(el, '.cr-h .wi'), 0, { stagger: 0.1, duration: 1.2 })
-      draw(tl, $(el, '.cr-ico .boil'), 0.2, { duration: 2 })
       fade(tl, [$(el, '.cr-sub'), $(el, '.cr-teacher'), $(el, '.cr-label')].filter(Boolean), 0.4)
-      fade(tl, $$(el, '.cr-names li'), 0.55, { stagger: 0.022, y: 10, duration: 0.6 })
+      fade(tl, $$(el, '.cr-names li'), 0.55, { stagger: 0.02, y: 8, duration: 0.6 })
       fade(tl, $(el, '.cr-cta'), 1)
       // En vertical la lista de nombres se desliza: ahí el gesto no cambia de escena.
       if (matchMedia('(max-aspect-ratio: 1/1)').matches) $(el, '.cr-list').dataset.scroll = ''

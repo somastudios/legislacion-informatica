@@ -39,7 +39,6 @@ export function mountShow(scenes, { title = C.title, onExit } = {}) {
     reduced,
     onChange(i, from, dir) {
       hud.update(i, from, dir)
-      q('hud').dataset.on = scenes[i].theme
       document.title = i === 0 ? title : `${scenes[i].title} · ${title}`
     },
   })

@@ -43,7 +43,7 @@ npm run build
 
 ## Estructura
 
-- `src/core/`: motor de la presentación. `deck` (escenas y movimientos de cámara), `dot` (el cursor), `boil` (trazo a mano), `hud` (índice y navegación), `fx` (entradas reutilizables).
+- `src/core/`: motor de la presentación, heredado de SOMA Studio. `deck` (escenas e iris), `dot` (el punto), `boil` (trazo a mano), `hud` (índice y navegación), `fx` (entradas reutilizables).
 - `src/show/`: la presentación. `scenes` arma las escenas con los datos, `viewer` muestra cada pieza, `player` monta la baraja.
 - `src/app/`: el taller. `auth` (entrar, unirse, recuperar), `home`, `activity`, `work`, `admin` e `import` (zip de Moodle).
 - `src/lib/`: `api` (Supabase), `match` (detección de duplicados), `files` (análisis de archivos en el navegador), `ui`.
