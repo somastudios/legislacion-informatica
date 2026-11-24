@@ -48,7 +48,7 @@ async function render() {
     cleanup = typeof c === 'function' ? c : null
   } catch (e) {
     console.error(e)
-    toast(e.message || 'No se pudo cargar la página.', 'error')
+    toast(e.message || 'No pudimos cargar esta página. Revisa tu conexión e inténtalo de nuevo.', 'error')
   }
 }
 

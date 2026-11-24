@@ -1,7 +1,7 @@
 // Una actividad: mi trabajo, subir, y todos los trabajos para decir «este es el mío».
 import { loadGen, me, rpc, workOf } from '../lib/api.js'
 import { confirmBox, esc, go, icon, pad, run, toast } from '../lib/ui.js'
-import { cover, dropzone, frame, names, thumb, withThumbs } from './parts.js'
+import { contents, cover, dropzone, frame, names, thumb, withThumbs } from './parts.js'
 
 export async function activity(root, id) {
   const main = frame(root, 'home')
@@ -33,7 +33,7 @@ export async function activity(root, id) {
                       <div class="mine-body">
                         <p class="mine-title">${esc(mine.title)}</p>
                         <p class="mine-team">${esc(names(mine, 8))}</p>
-                        <p class="mine-meta"><span class="chip is-ok">${icon.check} ${mine.assets.length} ${mine.assets.length === 1 ? 'pieza' : 'piezas'}</span>${lead ? '<span class="chip is-lead">Eres líder</span>' : ''}</p>
+                        <p class="mine-meta"><span class="chip is-ok">${icon.check} ${contents(mine)}</span>${lead ? '<span class="chip is-lead">Eres líder</span>' : ''}</p>
                         <div class="row">
                           <a class="btn btn-primary" href="#/t/${mine.id}">${lead ? 'Abrir y editar' : 'Abrir'} ${icon.arrow}</a>
                           <button type="button" class="btn btn-ghost" data-leave>No es mi equipo</button>
@@ -41,7 +41,7 @@ export async function activity(root, id) {
                       </div>
                     </div>
                     <div data-drop-slot class="mt"></div>`
-                  : `<p class="lead">Si alguien de tu equipo ya lo subió, el sistema lo detecta y te une sin duplicar nada. También puedes buscarlo abajo y marcar «Este es el mío».</p>
+                  : `<p class="lead">Sube el archivo o pega el enlace del video. Si alguien de tu equipo ya lo subió, te unimos a su equipo y nada se duplica. También puedes buscarlo abajo y elegir «Este es el mío».</p>
                      <div data-drop-slot class="mt"></div>`
               }
             </section>`
@@ -61,14 +61,14 @@ export async function activity(root, id) {
                       <a class="card-title" href="#/t/${w.id}">${esc(w.title)}</a>
                       <p class="card-team">${esc(names(w, 6)) || '<em>Sin integrantes</em>'}</p>
                       <div class="card-foot">
-                        <span class="t-label">${w.assets.length} ${w.assets.length === 1 ? 'pieza' : 'piezas'}</span>
+                        <span class="t-label">${contents(w)}</span>
                         ${isMine ? '<span class="chip is-ok">Tu equipo</span>' : student ? `<button type="button" class="btn btn-sm" data-join="${w.id}">Este es el mío</button>` : ''}
                       </div>
                     </div>
                   </article>`
                 })
                 .join('')}</div>`
-            : `<div class="empty"><p>Nadie ha subido nada aquí todavía.</p></div>`
+            : `<div class="empty"><p>Todavía no hay trabajos en esta actividad.</p></div>`
         }
       </section>`
 
@@ -77,7 +77,7 @@ export async function activity(root, id) {
 
     main.querySelector('[data-leave]')?.addEventListener('click', (e) =>
       run(e.currentTarget, async () => {
-        if (!(await confirmBox('¿Salir de este equipo?', 'Dejas de aparecer en este trabajo. Después puedes unirte al correcto o subir el tuyo.', 'Sí, salir'))) return
+        if (!(await confirmBox('¿Salir de este equipo?', 'Dejarás de aparecer en este trabajo. Después puedes unirte al equipo correcto o subir el tuyo.', 'Salir del equipo'))) return
         await rpc('leave_work', { p_work: mine.id })
         toast('Saliste del equipo.')
         await paint()
@@ -87,10 +87,10 @@ export async function activity(root, id) {
       b.addEventListener('click', () =>
         run(b, async () => {
           const w = data.works.get(b.dataset.join)
-          const text = mine ? `Te unes a «${w.title}» y sales de «${mine.title}».` : `Quedas como integrante de «${w.title}».`
-          if (!(await confirmBox('¿Este es tu trabajo?', text, 'Sí, es el mío'))) return
+          const text = mine ? `Entrarás a «${w.title}» y saldrás de «${mine.title}».` : `Aparecerás como integrante de «${w.title}».`
+          if (!(await confirmBox('¿Este es tu trabajo?', text, 'Sí, unirme'))) return
           await rpc('join_work', { p_work: w.id })
-          toast('Listo, ya estás en ese equipo.')
+          toast('Ya estás en este equipo.')
           await paint()
         }),
       ),

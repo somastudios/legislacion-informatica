@@ -24,7 +24,7 @@ function picker(root) {
           )
           .join('')}
       </div>
-      ${me.gens.length ? '' : '<p class="t-body">Todavía no perteneces a ninguna generación.</p>'}
+      ${me.gens.length ? '' : '<p class="t-body">Todavía no perteneces a ninguna generación. Pide el enlace de invitación de tu grupo.</p>'}
     </div>`
   const tl = gsap.timeline()
   rise(tl, root.querySelectorAll('.pick-h .wi'), 0.1, { stagger: 0.06, duration: 1.1 })

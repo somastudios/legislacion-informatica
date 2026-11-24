@@ -37,7 +37,7 @@ function thumb(work) {
   const a = work.assets.find((x) => x.kind === 'youtube' || x.thumb_path) || work.assets[0]
   if (a?.kind === 'youtube') return `<img src="https://i.ytimg.com/vi/${esc(a.yt_id)}/hqdefault.jpg" alt="" class="is-wide" /><i class="ch-play"></i>`
   if (a?.thumb_path && urlOf(a.thumb_path)) return `<img src="${esc(urlOf(a.thumb_path))}" alt="" />`
-  return `<b class="t-label">${esc(a ? KIND[viewerOf(a)] : 'Sin piezas')}</b>${a && viewerOf(a) === 'video' ? '<i class="ch-play"></i>' : ''}`
+  return `<b class="t-label">${esc(a ? KIND[viewerOf(a)] : 'Sin archivos')}</b>${a && viewerOf(a) === 'video' ? '<i class="ch-play"></i>' : ''}`
 }
 
 // ───────────────────────── Portada ─────────────────────────

@@ -11,9 +11,14 @@
   --blue: #216fff;
   --blue-soft: rgb(33 111 255 / 0.1);
   --red: #c8321e;
-  --r-lg: 26px;
-  --r-md: 18px;
-  --r-sm: 12px;
+  --r-lg: 28px;
+  --r-md: 20px;
+  --r-sm: 14px;
+  /* Relieve: un filo de luz arriba y una sombra corta abajo. Nada más. */
+  --lift: inset 0 1px 0 rgb(255 255 255 / 0.75), 0 1px 2px rgb(5 5 6 / 0.05), 0 14px 30px -22px rgb(5 5 6 / 0.4);
+  --lift-hover: inset 0 1px 0 rgb(255 255 255 / 0.75), 0 2px 4px rgb(5 5 6 / 0.06), 0 24px 44px -24px rgb(5 5 6 / 0.5);
+  --key: inset 0 1px 0 rgb(255 255 255 / 0.5), inset 0 -1px 0 rgb(5 5 6 / 0.1), 0 1px 1px rgb(5 5 6 / 0.08), 0 5px 12px -6px rgb(5 5 6 / 0.35);
+  --key-down: inset 0 2px 4px rgb(5 5 6 / 0.22);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -549,7 +554,7 @@ form.row select {
 .act:hover {
   transform: translateY(-2px);
   border-color: var(--ink);
-  box-shadow: 0 14px 30px -18px rgb(5 5 6 / 0.35);
+  box-shadow: var(--lift-hover);
 }
 
 .act-n {
@@ -1518,4 +1523,107 @@ textarea {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ───────────────────────── Relieve ─────────────────────────
+   Los botones tienen volumen de tecla: luz arriba, sombra abajo y se hunden al
+   presionarlos. Los contenedores se despegan apenas del papel. Sin degradados
+   de color: el volumen sale solo de luz y sombra sobre el color que ya tienen. */
+
+.btn {
+  --gloss: linear-gradient(to bottom, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0) 52%, rgb(5 5 6 / 0.07));
+  background-image: var(--gloss);
+  box-shadow: var(--key);
+}
+
+.btn:hover {
+  background-image: var(--gloss);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+  background-image: linear-gradient(to bottom, rgb(5 5 6 / 0.1), rgb(5 5 6 / 0) 60%);
+  box-shadow: var(--key-down);
+}
+
+.btn-primary {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), inset 0 -1px 0 rgb(5 5 6 / 0.2), 0 1px 1px rgb(5 5 6 / 0.12), 0 8px 16px -8px rgb(33 111 255 / 0.85);
+}
+
+.btn-ink {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 1px rgb(5 5 6 / 0.2), 0 8px 16px -8px rgb(5 5 6 / 0.7);
+}
+
+.btn-ghost,
+.btn-ghost:hover,
+.btn-ghost:active {
+  background-image: none;
+  box-shadow: none;
+}
+
+.act,
+.card,
+.rowi,
+.table-wrap,
+.plan li {
+  box-shadow: var(--lift);
+}
+
+.card:hover {
+  box-shadow: var(--lift-hover);
+}
+
+.mine {
+  box-shadow: 0 0 0 3px var(--blue-soft), var(--lift);
+}
+
+.card.is-mine {
+  box-shadow: 0 0 0 3px var(--blue-soft), var(--lift);
+}
+
+.thumb {
+  box-shadow: inset 0 0 0 1px rgb(5 5 6 / 0.06);
+}
+
+.act-go,
+.avatar,
+.drop-ic {
+  box-shadow: var(--key);
+}
+
+.top-nav a.is-on {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 4px 10px -5px rgb(5 5 6 / 0.6);
+}
+
+/* Campos hundidos; pestañas como control segmentado. */
+input:not([type='checkbox'], [type='file']),
+textarea,
+select {
+  box-shadow: inset 0 1px 2px rgb(5 5 6 / 0.07);
+}
+
+:is(input, textarea, select):focus {
+  box-shadow: inset 0 1px 2px rgb(5 5 6 / 0.05), 0 0 0 4px var(--blue-soft);
+}
+
+:is(.h1-input, .lead-input, .inline):not(:focus) {
+  box-shadow: none;
+}
+
+.tabs {
+  box-shadow: inset 0 1px 2px rgb(5 5 6 / 0.1);
+}
+
+.tabs a.is-on {
+  box-shadow: var(--key);
+}
+
+.dlg {
+  border-radius: 30px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.8), 0 40px 90px -24px rgb(5 5 6 / 0.55);
+}
+
+.toast {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 14px 30px -12px rgb(5 5 6 / 0.6);
 }

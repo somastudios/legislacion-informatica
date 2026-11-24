@@ -6,7 +6,7 @@ import { cover, frame, names, thumb, withThumbs } from './parts.js'
 export async function home(root) {
   const main = frame(root, 'home')
   if (!me.gen) {
-    main.innerHTML = `<div class="empty"><h1 class="h1">Todavía no perteneces a ningún grupo</h1><p>Pide el enlace de invitación de tu generación.</p></div>`
+    main.innerHTML = `<div class="empty"><h1 class="h1">Todavía no perteneces a ningún grupo</h1><p>Pídele a alguien de tu generación el enlace de invitación.</p></div>`
     return
   }
   const data = await withThumbs(await loadGen())
@@ -24,9 +24,9 @@ export async function home(root) {
         <p class="hero-s">${
           student
             ? done === total
-              ? 'Ya tienes trabajo en todas las actividades. Revisa que cada ficha diga lo que hiciste.'
-              : 'Revisa cada actividad: confirma tu equipo y sube lo que falte.'
-            : 'Así va la recolección de trabajos del grupo.'
+              ? 'Ya apareces en todas las actividades. Abre cada ficha y revisa que diga lo que hiciste.'
+              : 'Aquí están tus trabajos del semestre. Revisa que estés en el equipo correcto y sube lo que falte.'
+            : 'Así van los trabajos del grupo.'
         }</p>
       </div>
       ${student ? `<div class="meter" style="--p:${total ? done / total : 0}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50"/><circle class="meter-arc" cx="60" cy="60" r="50" pathLength="1" transform="rotate(-90 60 60)"/></svg><b>${done}<small>/${total}</small></b><span class="t-label">actividades</span></div>` : ''}
@@ -46,8 +46,8 @@ export async function home(root) {
                 student
                   ? w
                     ? `<span class="act-state"><span class="chip is-ok">${icon.check} ${esc(w.title)}</span>${lead ? '<span class="chip is-lead">Eres líder</span>' : ''}<span class="act-team">${esc(names(w, 5))}</span></span>`
-                    : `<span class="act-state"><span class="chip is-todo">Sin trabajo todavía</span><span class="act-team">Súbelo o encuéntralo entre los que ya están</span></span>`
-                  : `<span class="act-state"><span class="chip">${a.works.length} ${a.works.length === 1 ? 'trabajo' : 'trabajos'}</span><span class="act-team">${withWork} de ${students} con entrega</span></span>`
+                    : `<span class="act-state"><span class="chip is-todo">Falta tu trabajo</span><span class="act-team">Súbelo o búscalo entre los que ya están</span></span>`
+                  : `<span class="act-state"><span class="chip">${a.works.length} ${a.works.length === 1 ? 'trabajo' : 'trabajos'}</span><span class="act-team">${withWork} de ${students} ya entregaron</span></span>`
               }
             </span>
             ${thumb(w ? cover(w) : a.works[0] && !student ? cover(a.works[0]) : null, 'act-thumb')}
@@ -56,5 +56,5 @@ export async function home(root) {
         })
         .join('')}
     </ol>
-    ${data.activities.length ? '' : '<div class="empty"><p>Aún no hay actividades en esta generación.</p></div>'}`
+    ${data.activities.length ? '' : '<div class="empty"><p>Todavía no hay actividades en esta generación.</p></div>'}`
 }

@@ -28,8 +28,8 @@ export async function admin(root, tab = 'personas') {
     const data = await loadGen()
     main.innerHTML = `
       <header class="page-head">
-        <p class="t-label">Administración · ${esc(data?.gen?.name || '')}</p>
-        <h1 class="h1">Todo bajo control</h1>
+        <p class="t-label">${esc(data?.gen?.name || '')}</p>
+        <h1 class="h1">Administración</h1>
       </header>
       <nav class="tabs">${TABS.map(([k, l]) => `<a href="#/admin/${k}" class="${k === tab ? 'is-on' : ''}">${l}</a>`).join('')}</nav>
       <div data-tab></div>`
@@ -48,7 +48,7 @@ async function personas(el, data, paint) {
   const withAccount = data.people.filter((p) => p.user_id).length
   el.innerHTML = `
     <div class="bar">
-      <p class="lead">${withAccount} de ${data.people.length} ya tienen cuenta. Toca a alguien para corregir sus datos, su contraseña o su lugar.</p>
+      <p class="lead">${withAccount} de ${data.people.length} personas ya tienen cuenta. Elige a alguien para corregir sus datos, cambiar su contraseña o liberar su lugar.</p>
       <div class="row"><button type="button" class="btn btn-ghost" data-paste>Pegar lista</button>
         <button type="button" class="btn" data-new>${icon.plus} Agregar persona</button></div>
     </div>
@@ -67,22 +67,22 @@ async function personas(el, data, paint) {
             return `<tr>
               <td><button type="button" class="link" data-person="${p.id}">${esc(p.sort_name || p.full_name)}</button>
                 ${p.role === 'teacher' ? '<span class="chip">Docente</span>' : ''}${p.is_admin ? '<span class="chip is-lead">Admin</span>' : ''}</td>
-              <td>${p.user_id ? `<span class="chip is-ok">${icon.check} ${esc(priv.get(p.id)?.email || 'Con cuenta')}</span>` : '<span class="mute">Sin entrar</span>'}</td>
+              <td>${p.user_id ? `<span class="chip is-ok">${icon.check} ${esc(priv.get(p.id)?.email || 'Con cuenta')}</span>` : '<span class="mute">Aún no entra</span>'}</td>
               ${cells}
               <td class="r"><button type="button" class="ibtn" data-person="${p.id}" aria-label="Editar">${icon.dots}</button></td>
             </tr>`
           })
           .join('')}
       </tbody>
-      <tfoot><tr><td colspan="2" class="mute">Con entrega</td>${data.activities.map((a) => `<td class="c">${students.filter((p) => workOf(a, p.id)).length}</td>`).join('')}<td></td></tr></tfoot>
+      <tfoot><tr><td colspan="2" class="mute">Ya entregaron</td>${data.activities.map((a) => `<td class="c">${students.filter((p) => workOf(a, p.id)).length}</td>`).join('')}<td></td></tr></tfoot>
     </table></div>
-    <p class="hint"><i class="dot-ok"></i> tiene trabajo · <i class="dot-ok is-lead"></i> es líder · <i class="dot-no"></i> sin trabajo. Los números son las actividades en orden.</p>`
+    <p class="hint"><i class="dot-ok"></i> tiene trabajo · <i class="dot-ok is-lead"></i> es líder · <i class="dot-no"></i> le falta. Cada número es una actividad, en orden.</p>`
 
   el.querySelector('[data-new]').addEventListener('click', async () => {
     const f = await dialog({
       title: 'Agregar persona',
-      body: `${field('Nombre para créditos', 'full_name', { hint: 'Como debe verse: Nombre Apellidos.', attrs: 'required' })}
-        ${field('Nombre de lista', 'sort_name', { hint: 'Apellidos Nombre, para ordenar.' })}
+      body: `${field('Nombre para créditos', 'full_name', { hint: 'Como debe aparecer: Nombre Apellidos.', attrs: 'required' })}
+        ${field('Nombre de lista', 'sort_name', { hint: 'Apellidos Nombre. Sirve para ordenar la lista.' })}
         ${field('Matrícula', 'matricula')}`,
       actions: [{ label: 'Cancelar', value: null }, { label: 'Agregar', value: 'add', kind: 'primary', submit: true }],
     })
@@ -120,7 +120,7 @@ async function personas(el, data, paint) {
         have.add(m[1])
         n++
       }
-      toast(n ? `${n} personas agregadas. Revisa que los nombres para créditos estén bien.` : 'No encontré renglones nuevos con matrícula y nombre.')
+      toast(n ? `Se agregaron ${n} personas. Revisa que sus nombres para créditos estén bien.` : 'No encontramos renglones nuevos con matrícula y nombre.')
       await paint()
     })
   })
@@ -139,35 +139,35 @@ async function personas(el, data, paint) {
             ${field('Matrícula', 'matricula', { value: pr.matricula || '' })}
             <label class="field"><span class="field-label">Rol</span><select name="role"><option value="student" ${p.role === 'student' ? 'selected' : ''}>Alumno</option><option value="teacher" ${p.role === 'teacher' ? 'selected' : ''}>Docente</option></select></label>
           </div>
-          <label class="check"><input type="checkbox" name="is_admin" ${p.is_admin ? 'checked' : ''} /> <span>Es administrador (puede cambiar todo)</span></label>
+          <label class="check"><input type="checkbox" name="is_admin" ${p.is_admin ? 'checked' : ''} /> <span>Es administrador y puede cambiar todo</span></label>
           <hr class="sep" />
           ${
             p.user_id
               ? `<p class="t-label">Cuenta</p>
                  <div class="cols">
                    ${field('Correo', 'email', { type: 'email', value: pr.email || '' })}
-                   ${field('Nueva contraseña', 'password', { hint: 'Déjala vacía para no cambiarla. Mínimo 6 caracteres.', attrs: 'autocomplete="off"' })}
+                   ${field('Nueva contraseña', 'password', { hint: 'Déjala vacía si no quieres cambiarla. Al menos 6 caracteres.', attrs: 'autocomplete="off"' })}
                  </div>`
-              : `<p class="dlg-text mute">Todavía no ha creado su cuenta. Entra con el enlace de invitación y su matrícula.</p>`
+              : `<p class="dlg-text mute">Todavía no crea su cuenta. Puede hacerlo con el enlace de invitación y su matrícula.</p>`
           }`,
         actions: [
           { label: 'Eliminar persona', value: 'delete', kind: 'danger', submit: true },
-          ...(p.user_id ? [{ label: 'Desvincular cuenta', value: 'unlink', submit: true }] : []),
+          ...(p.user_id ? [{ label: 'Liberar su lugar', value: 'unlink', submit: true }] : []),
           { label: 'Guardar', value: 'save', kind: 'primary', submit: true },
         ],
       })
       if (!f?._action) return
       await run(null, async () => {
         if (f._action === 'delete') {
-          if (!(await confirmBox('¿Eliminar a esta persona?', `${p.full_name} sale de la lista y de todos sus equipos. Su cuenta, si tiene, deja de tener acceso.`, 'Sí, eliminar', 'danger'))) return
+          if (!(await confirmBox('¿Eliminar a esta persona?', `${p.full_name} saldrá de la lista y de todos sus equipos. Si tiene cuenta, ya no podrá entrar.`, 'Eliminar persona', 'danger'))) return
           if (p.user_id && p.user_id !== me.user.id) await portal('admin_unlink', { person_id: p.id })
           await write(sb.from('people').delete().eq('id', p.id))
           toast('Persona eliminada.')
         } else if (f._action === 'unlink') {
-          if (!(await confirmBox('¿Desvincular la cuenta?', `Se borra la cuenta con la que alguien entró como ${p.full_name}. El lugar queda libre para que entre la persona correcta; sus trabajos no se tocan.`, 'Sí, desvincular', 'danger'))) return
+          if (!(await confirmBox('¿Liberar este lugar?', `Se borrará la cuenta con la que alguien entró como ${p.full_name}, para que pueda entrar la persona correcta. Sus trabajos se quedan como están.`, 'Liberar lugar', 'danger'))) return
           await portal('admin_unlink', { person_id: p.id })
           invalidate()
-          toast('Cuenta desvinculada.')
+          toast('Lugar liberado.')
         } else {
           await write(sb.from('people').update({ full_name: f.full_name.trim(), sort_name: f.sort_name.trim() || f.full_name.trim(), role: f.role, is_admin: !!f.is_admin }).eq('id', p.id))
           if ((f.matricula.trim() || null) !== (pr.matricula || null)) await write(sb.from('people_private').upsert({ person_id: p.id, matricula: f.matricula.trim() || null }, { onConflict: 'person_id' }))
@@ -196,7 +196,7 @@ const actForm = (a = {}) => `
 async function actividades(el, data, paint) {
   el.innerHTML = `
     <div class="bar">
-      <p class="lead">Importa el zip de Moodle («Descargar todas las entregas») y los equipos se arman solos. Puedes repetirlo: no duplica nada.</p>
+      <p class="lead">Sube el zip de Moodle («Descargar todas las entregas») y los equipos se arman solos. Puedes repetirlo cuando quieras: nada se duplica.</p>
       <button type="button" class="btn" data-new>${icon.plus} Nueva actividad</button>
     </div>
     <ul class="rows">
@@ -217,7 +217,7 @@ async function actividades(el, data, paint) {
         )
         .join('')}
     </ul>
-    ${data.activities.length ? '' : '<div class="empty"><p>Crea la primera actividad.</p></div>'}`
+    ${data.activities.length ? '' : '<div class="empty"><p>Todavía no hay actividades. Crea la primera.</p></div>'}`
 
   const edit = async (a) => {
     const f = await dialog({
@@ -229,7 +229,7 @@ async function actividades(el, data, paint) {
     if (!f?._action) return
     await run(null, async () => {
       if (f._action === 'delete') {
-        if (!(await confirmBox('¿Eliminar la actividad?', `Se borran también sus ${a.works.length} trabajos. No se puede deshacer.`, 'Sí, eliminar', 'danger'))) return
+        if (!(await confirmBox('¿Eliminar esta actividad?', `También se borrarán sus ${a.works.length} trabajos. Esto no se puede deshacer.`, 'Eliminar actividad', 'danger'))) return
         await write(sb.from('activities').delete().eq('id', a.id))
       } else {
         const row = { title: f.title.trim(), label: f.label.trim() || null, kind: f.kind, position: +f.position || 0, description: f.description.trim() || null }
@@ -257,19 +257,19 @@ async function actividades(el, data, paint) {
           title: `${plan.groups.length} equipos detectados`,
           wide: true,
           body: `
-            <p class="dlg-text">${plan.entries} archivos de ${plan.students} personas. Revisa que los equipos tengan sentido; después cualquier admin o líder puede corregirlos.</p>
-            ${plan.unmatched.length ? `<div class="notice is-warn">No encontré en la lista a: ${esc(plan.unmatched.join(', '))}. Sus archivos no se importan; agrégalos en Personas y repite.</div>` : ''}
+            <p class="dlg-text">Encontramos ${plan.entries} archivos de ${plan.students} personas. Revisa que los equipos tengan sentido. Después, cualquier administrador o líder puede corregirlos.</p>
+            ${plan.unmatched.length ? `<div class="notice is-warn">No encontramos en la lista a ${esc(plan.unmatched.join(', '))}. Sus archivos no se importarán. Agrégalos en Personas y vuelve a subir el zip.</div>` : ''}
             <ol class="plan">${plan.groups
               .map(
                 (g) => `<li><p class="rowi-title">${esc(g.members.map((id) => shortName(data.person.get(id))).join(', '))}</p>
-                  <p class="rowi-meta">${[...g.yt.map(() => 'Video de YouTube'), ...g.files.map((f) => f.filename)].map(esc).join(' · ') || 'Sin piezas'}</p></li>`,
+                  <p class="rowi-meta">${[...g.yt.map(() => 'Video de YouTube'), ...g.files.map((f) => f.filename)].map(esc).join(' · ') || 'Sin archizas'}</p></li>`,
               )
               .join('')}</ol>`,
           actions: [{ label: 'Cancelar', value: false }, { label: 'Importar', value: true, kind: 'primary' }],
         })
         if (!ok) return paint()
         const r = await saveImport(act, data.id, plan, data.people, status)
-        toast(`Importado: ${r.works} trabajos nuevos, ${r.assets} piezas, ${r.members} integrantes.`)
+        toast(`Listo. Se agregaron ${r.works} trabajos, ${r.assets} archivos y ${r.members} integrantes.`)
         await paint()
       })
     }),
@@ -285,7 +285,7 @@ async function acceso(el, data, paint) {
   el.innerHTML = `
     <section class="block">
       <h2 class="h2">Enlaces de invitación</h2>
-      <p class="lead">Con el enlace de grupo cada quien crea su cuenta usando su matrícula. El de administración solo sirve para los correos autorizados.</p>
+      <p class="lead">Con el enlace del grupo, cada quien crea su cuenta usando su matrícula. El de administración solo funciona con los correos autorizados.</p>
       <ul class="rows">
         ${invites
           .map(
@@ -294,12 +294,12 @@ async function acceso(el, data, paint) {
               <div class="rowi-body">
                 <p class="rowi-title">${i.grants === 'admin' ? 'Administración (docente y admins)' : 'Grupo (alumnos)'} ${i.active ? '' : '<span class="chip is-todo">Pausado</span>'}</p>
                 <p class="rowi-meta mono">${esc(base + i.code)}</p>
-                ${i.grants === 'member' ? `<p class="rowi-meta">Código del grupo para recuperar contraseña: <b class="mono">${esc(i.code)}</b></p>` : ''}
+                ${i.grants === 'member' ? `<p class="rowi-meta">Código del grupo, para recuperar contraseñas: <b class="mono">${esc(i.code)}</b></p>` : ''}
               </div>
               <div class="rowi-acts">
                 <button type="button" class="btn btn-sm" data-copy="${esc(base + i.code)}">${icon.copy} Copiar</button>
                 <button type="button" class="btn btn-sm btn-ghost" data-toggle="${esc(i.code)}">${i.active ? 'Pausar' : 'Activar'}</button>
-                <button type="button" class="btn btn-sm btn-ghost" data-renew="${esc(i.code)}">Cambiar</button>
+                <button type="button" class="btn btn-sm btn-ghost" data-renew="${esc(i.code)}">Generar otro</button>
               </div>
             </li>`,
           )
@@ -319,7 +319,7 @@ async function acceso(el, data, paint) {
     </section>
     <section class="block">
       <h2 class="h2">Generaciones</h2>
-      <p class="lead">Cada generación tiene su lista, sus actividades y su presentación. El sistema es el mismo.</p>
+      <p class="lead">Cada generación tiene su propia lista, sus actividades y su presentación.</p>
       <div class="row">${me.gens.map((x) => `<span class="chip ${x.id === g.id ? 'is-ok' : ''}">${esc(x.name)}</span>`).join('')}
         <button type="button" class="btn" data-newgen>${icon.plus} Nueva generación</button></div>
     </section>`
@@ -338,7 +338,7 @@ async function acceso(el, data, paint) {
     b.addEventListener('click', () =>
       run(b, async () => {
         const i = invites.find((x) => x.code === b.dataset.renew)
-        if (!(await confirmBox('¿Cambiar este enlace?', 'El enlace anterior deja de funcionar. Quien ya tiene cuenta no se ve afectado.', 'Sí, cambiar'))) return
+        if (!(await confirmBox('¿Generar otro enlace?', 'El enlace actual dejará de funcionar. Quienes ya tienen cuenta no se ven afectados.', 'Generar enlace'))) return
         await write(sb.from('invites').update({ code: i.grants === 'admin' ? code('admin-', 10) : code(`liia${g.slug.slice(-2)}-`, 4) }).eq('code', i.code))
         await paint()
       }),
@@ -367,7 +367,7 @@ async function acceso(el, data, paint) {
       await write(sb.from('invites').insert([{ code: code(`liia${ng.slug.slice(-2)}-`, 4), generation_id: ng.id, grants: 'member' }, { code: code('admin-', 10), generation_id: ng.id, grants: 'admin' }]))
       await loadMe()
       pickGen(ng.id)
-      toast(`${ng.name} creada. Agrega su lista y sus actividades.`)
+      toast(`${ng.name} está lista. Ahora agrega su lista y sus actividades.`)
       go('/admin/actividades')
     })
   })

@@ -64,7 +64,7 @@ export function createViewer(host) {
     host.dataset.kind = kind
     if (kind === 'youtube' && globalThis.__LIIA_DEMO__) {
       // Dentro de la demostración no se pueden incrustar videos: se enlaza.
-      host.innerHTML = `<a class="mv-file" href="https://youtu.be/${encodeURIComponent(asset.yt_id)}" target="_blank" rel="noopener">Ver el video en YouTube</a>`
+      host.innerHTML = `<a class="mv-file" href="https://youtu.be/${encodeURIComponent(asset.yt_id)}" target="_blank" rel="noopener">Abrir el video en YouTube</a>`
       host.classList.add('is-ready')
       return
     }

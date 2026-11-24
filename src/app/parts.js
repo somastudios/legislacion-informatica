@@ -53,6 +53,15 @@ export function thumb(asset, cls = '') {
   return `<span class="thumb is-empty ${cls}">${(asset.mime || '').startsWith('video/') ? icon.play : icon.file}<b>${esc(ext.slice(0, 4))}</b></span>`
 }
 
+/** Cuenta lo que trae un trabajo con su nombre: «2 archivos», «1 video», «1 archivo y 1 video». */
+export function contents(work) {
+  const videos = work.assets.filter((a) => a.kind === 'youtube').length
+  const files = work.assets.length - videos
+  const say = (n, one, many) => `${n} ${n === 1 ? one : many}`
+  const parts = [files && say(files, 'archivo', 'archivos'), videos && say(videos, 'video', 'videos')].filter(Boolean)
+  return parts.join(' y ') || 'Sin archivos'
+}
+
 export const cover = (work) => work.assets.find((a) => a.kind === 'youtube' || a.thumb_path) || work.assets[0]
 
 export async function withThumbs(data) {
@@ -79,30 +88,30 @@ async function resolve(act, matches, target) {
   const mine = target || workOf(data.activities.find((a) => a.id === act.id), me.person?.id)?.id
   if (best.work_id === mine) {
     if (exact) {
-      toast('Esa pieza ya está en este trabajo.')
+      toast('Ese archivo ya está en este trabajo.')
       return 'already'
     }
     return 'new'
   }
   const other = data.works.get(best.work_id)
-  const who = other ? `«${other.title}» de ${names(other) || 'un equipo sin integrantes'}` : 'otro trabajo'
+  const who = other ? `«${other.title}», de ${names(other) || 'un equipo que aún no tiene integrantes'}` : 'otro trabajo'
   if (target) {
     if (!exact) return 'new'
-    await dialog({ title: 'Esa pieza ya existe', body: `<p class="dlg-text">Ya está en ${esc(who)}. No se duplicó.</p>` })
+    await dialog({ title: 'Ese archivo ya está subido', body: `<p class="dlg-text">Está en ${esc(who)}, así que no lo duplicamos.</p>` })
     return 'cancel'
   }
-  const why = { hash: 'Es exactamente el mismo archivo.', youtube: 'Es el mismo video.', texto: `El texto coincide en ${Math.round(best.score * 100)} %.`, imagen: 'La imagen es casi idéntica.' }[best.reason]
+  const why = { hash: 'Es exactamente el mismo archivo.', youtube: 'Es el mismo video.', texto: `El texto coincide en un ${Math.round(best.score * 100)} %.`, imagen: 'La imagen es casi idéntica.' }[best.reason]
   const pick = await dialog({
     title: exact ? 'Tu equipo ya lo subió' : '¿Es el mismo trabajo?',
     body: `<p class="dlg-text">${esc(why)} Ya está en ${esc(who)}.</p>
-      <p class="dlg-text">${mine ? 'Si te unes, sales del trabajo que tenías en esta actividad.' : 'Únete y quedas en ese equipo, sin subir nada dos veces.'}</p>`,
+      <p class="dlg-text">${mine ? 'Si te unes, saldrás del trabajo que tenías en esta actividad.' : 'Únete a ese equipo y listo. No hace falta subirlo otra vez.'}</p>`,
     actions: exact
-      ? [{ label: 'Cancelar', value: 'cancel' }, { label: 'Unirme a ese equipo', value: 'join', kind: 'primary' }]
-      : [{ label: 'Es otro trabajo: subirlo aparte', value: 'new' }, { label: 'Es el mismo: unirme', value: 'join', kind: 'primary' }],
+      ? [{ label: 'Cancelar', value: 'cancel' }, { label: 'Unirme al equipo', value: 'join', kind: 'primary' }]
+      : [{ label: 'No, es otro trabajo', value: 'new' }, { label: 'Sí, unirme al equipo', value: 'join', kind: 'primary' }],
   })
   if (pick === 'join') {
     await rpc('join_work', { p_work: best.work_id })
-    toast('Listo, ya estás en ese equipo.')
+    toast('Ya estás en este equipo.')
     return 'joined'
   }
   return pick || 'cancel'
@@ -124,18 +133,18 @@ export async function submitYoutube(act, id, { work = null } = {}) {
 
 export async function submitLink(act, text, opts) {
   const id = ytIds(text)[0]
-  if (!id) throw new Error('Ese enlace no parece de YouTube. Pega el enlace completo del video.')
+  if (!id) throw new Error('Ese enlace no parece de YouTube. Copia el enlace completo del video y pégalo aquí.')
   return submitYoutube(act, id, opts)
 }
 
 export async function submitFile(act, file, { work = null, status = () => {} } = {}) {
-  if (file.size > MAX_FILE_MB * 1e6) throw new Error(`El archivo pesa más de ${MAX_FILE_MB} MB. Si es un video, súbelo a YouTube y pega el enlace.`)
+  if (file.size > MAX_FILE_MB * 1e6) throw new Error(`Ese archivo pesa más de ${MAX_FILE_MB} MB. Si es un video, súbelo a YouTube y pega aquí el enlace.`)
   status('Leyendo el archivo…')
   const bytes = new Uint8Array(await file.arrayBuffer())
   const info = await analyze(file.name, bytes)
   // Un PDF o txt que solo trae el enlace del video cuenta como el video.
   if (info.yt.length && info.chars < 400) return submitYoutube(act, info.yt[0], { work })
-  status('Comparando con lo que ya hay…')
+  status('Revisando si alguien ya lo subió…')
   const r = await resolve(act, await find(act, { sha: info.sha, sig: info.sig, phash: info.phash, yt: info.yt[0] || null }), work)
   if (r !== 'new') return r
   status('Subiendo…')
@@ -152,8 +161,8 @@ export function dropzone(el, act, { work = null, onDone, compact = false } = {})
       <input type="file" hidden data-file accept=".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx,.mp4,.webm,.mov,.txt" />
       <button type="button" class="drop-main" data-pick>
         <span class="drop-ic">${icon.upload}</span>
-        <span class="drop-t">${compact ? 'Agregar otra pieza' : 'Suelta tu archivo aquí'}</span>
-        <span class="drop-s" data-status>${compact ? 'PDF, imagen, Word o video' : 'o haz clic para elegirlo · PDF, imagen, Word o video'}</span>
+        <span class="drop-t">${compact ? 'Agregar otro archivo' : 'Arrastra tu archivo aquí'}</span>
+        <span class="drop-s" data-status>${compact ? 'PDF, imagen, Word o video' : 'o haz clic para elegirlo. Puede ser PDF, imagen, Word o video.'}</span>
       </button>
       <form class="drop-link" data-link>
         <input type="url" name="url" placeholder="o pega el enlace de YouTube" aria-label="Enlace de YouTube" />
@@ -172,7 +181,7 @@ export function dropzone(el, act, { work = null, onDone, compact = false } = {})
       if (r === 'added' || r === 'joined') await onDone?.()
     } catch (e) {
       console.error(e)
-      toast(e.message || 'No se pudo subir.', 'error')
+      toast(e.message || 'No pudimos subir el archivo. Inténtalo de nuevo.', 'error')
     } finally {
       drop.classList.remove('is-busy')
       if (status.isConnected) status.textContent = idle

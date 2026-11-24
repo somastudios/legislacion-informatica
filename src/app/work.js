@@ -23,17 +23,17 @@ export async function work(root, id) {
     main.innerHTML = `
       <a class="crumb" href="#/a/${act.id}">${icon.back} ${esc(act.label || 'Actividad')}</a>
       <header class="page-head">
-        <p class="t-label">Trabajo${canEdit ? ' · puedes editar esta ficha' : ''}</p>
+        <p class="t-label">Ficha del trabajo${canEdit ? ' · puedes editarla' : ''}</p>
         ${
           canEdit
             ? `<input class="h1 h1-input" data-title value="${esc(w.title)}" aria-label="Título del trabajo" maxlength="140" />
-               <textarea class="lead lead-input" data-summary rows="3" maxlength="600" placeholder="¿De qué trata? Dos o tres líneas para quien lo vea en la presentación.">${esc(w.summary || '')}</textarea>`
+               <textarea class="lead lead-input" data-summary rows="3" maxlength="600" placeholder="¿De qué trata? Cuéntalo en dos o tres líneas para quien lo vea en la presentación.">${esc(w.summary || '')}</textarea>`
             : `<h1 class="h1">${esc(w.title)}</h1>${w.summary ? `<p class="lead">${esc(w.summary)}</p>` : ''}`
         }
       </header>
 
       <section class="block">
-        <h2 class="h2">Piezas <span class="count">${w.assets.length}</span></h2>
+        <h2 class="h2">Archivos <span class="count">${w.assets.length}</span></h2>
         <ul class="rows">
           ${w.assets
             .map((a) => {
@@ -42,25 +42,25 @@ export async function work(root, id) {
               return `<li class="rowi">
                 ${thumb(a, 'rowi-thumb')}
                 <div class="rowi-body">
-                  ${canEdit ? `<input class="inline" data-label="${a.id}" value="${esc(a.label || '')}" placeholder="Ponle nombre: Documento, Presentación, Cartel…" aria-label="Nombre de la pieza" maxlength="120" />` : `<p class="rowi-title">${esc(pieceLabel(a))}</p>`}
+                  ${canEdit ? `<input class="inline" data-label="${a.id}" value="${esc(a.label || '')}" placeholder="Ponle un nombre: Documento, Presentación, Cartel…" aria-label="Nombre del archivo" maxlength="120" />` : `<p class="rowi-title">${esc(pieceLabel(a))}</p>`}
                   <p class="rowi-meta">${esc(meta)}${a.filename ? ` · ${esc(a.filename)}` : ''}</p>
                 </div>
                 <div class="rowi-acts">
                   <button type="button" class="btn btn-sm" data-open="${a.id}">Ver ${icon.eye}</button>
-                  ${canEdit ? `<button type="button" class="ibtn" data-del-asset="${a.id}" title="Quitar pieza" aria-label="Quitar pieza">${icon.trash}</button>` : ''}
+                  ${canEdit ? `<button type="button" class="ibtn" data-del-asset="${a.id}" title="Quitar archivo" aria-label="Quitar archivo">${icon.trash}</button>` : ''}
                 </div>
               </li>`
             })
             .join('')}
         </ul>
-        ${w.assets.length ? '' : '<div class="empty"><p>Este trabajo todavía no tiene piezas.</p></div>'}
+        ${w.assets.length ? '' : '<div class="empty"><p>Este trabajo todavía no tiene archivos.</p></div>'}
         ${canEdit || isMember ? '<div data-drop-slot class="mt"></div>' : ''}
       </section>
 
       <section class="block">
         <h2 class="h2">Equipo y créditos <span class="count">${w.members.length}</span></h2>
-        <p class="lead">Escribe qué hizo cada quien: así sale en los créditos de la presentación.</p>
-        ${!w.leader_id && isMember ? `<div class="notice">Este equipo no tiene líder. <button type="button" class="btn btn-sm btn-primary" data-lead="${myId}">Ser líder</button></div>` : ''}
+        <p class="lead">Escribe qué hizo cada quien. Así aparecerá en los créditos de la presentación.</p>
+        ${!w.leader_id && isMember ? `<div class="notice">Este equipo todavía no tiene líder. Quien lo sea podrá editar la ficha y los créditos. <button type="button" class="btn btn-sm btn-primary" data-lead="${myId}">Ser líder</button></div>` : ''}
         <ul class="rows">
           ${w.members
             .map((m) => {
@@ -70,7 +70,7 @@ export async function work(root, id) {
                 <span class="avatar ${leader ? 'is-lead' : ''}">${esc(initials(m.person))}</span>
                 <div class="rowi-body">
                   <p class="rowi-title">${esc(m.person?.full_name)} ${leader ? '<span class="chip is-lead">Líder</span>' : ''}${self ? '<span class="chip">Tú</span>' : ''}</p>
-                  ${canEdit || self ? `<input class="inline" data-contrib="${m.person_id}" value="${esc(m.contribution || '')}" placeholder="¿Qué hizo? Ej. investigación, redacción, diseño del cartel…" maxlength="160" aria-label="Aportación de ${esc(m.person?.full_name)}" />` : `<p class="rowi-meta">${esc(m.contribution || 'Sin aportación escrita')}</p>`}
+                  ${canEdit || self ? `<input class="inline" data-contrib="${m.person_id}" value="${esc(m.contribution || '')}" placeholder="¿Qué hizo? Por ejemplo: investigación, redacción, diseño del cartel…" maxlength="160" aria-label="Aportación de ${esc(m.person?.full_name)}" />` : `<p class="rowi-meta">${esc(m.contribution || 'Aún no se describe su parte')}</p>`}
                 </div>
                 <div class="rowi-acts">
                   ${canEdit && !leader ? `<button type="button" class="btn btn-sm btn-ghost" data-lead="${m.person_id}">Hacer líder</button>` : ''}
@@ -88,7 +88,7 @@ export async function work(root, id) {
                 </select>
                 <button class="btn" type="submit">${icon.plus} Agregar</button>
               </form>
-              ${me.isAdmin ? '' : '<p class="hint">Solo aparecen quienes aún no tienen equipo en esta actividad. Si alguien quedó en otro, que use «Este es el mío» o pídeselo a un administrador.</p>'}`
+              ${me.isAdmin ? '' : '<p class="hint">Aquí solo aparecen quienes aún no tienen equipo en esta actividad. Si alguien quedó en otro equipo, puede cambiarse con «Este es el mío» o pedírselo a un administrador.</p>'}`
             : ''
         }
       </section>
@@ -123,7 +123,7 @@ export async function work(root, id) {
     on('[data-open]', 'click', (el) => run(el, () => openAsset(w.assets.find((a) => a.id === el.dataset.open))))
     on('[data-del-asset]', 'click', (el) =>
       run(el, async () => {
-        if (!(await confirmBox('¿Quitar esta pieza?', 'Deja de aparecer en el trabajo.', 'Sí, quitar', 'danger'))) return
+        if (!(await confirmBox('¿Quitar este archivo?', 'Dejará de aparecer en el trabajo y en la presentación.', 'Quitar archivo', 'danger'))) return
         await write(sb.from('assets').delete().eq('id', el.dataset.delAsset))
         await paint()
       }),
@@ -131,14 +131,14 @@ export async function work(root, id) {
     on('[data-lead]', 'click', (el) =>
       run(el, async () => {
         await rpc('set_leader', { p_work: id, p_person: el.dataset.lead })
-        toast('Líder actualizado.')
+        toast('Listo, el equipo tiene nuevo líder.')
         await paint()
       }),
     )
     on('[data-del-member]', 'click', (el) =>
       run(el, async () => {
         const p = data.person.get(el.dataset.delMember)
-        if (!(await confirmBox('¿Quitar del equipo?', `${p?.full_name} deja de aparecer en este trabajo.`, 'Sí, quitar', 'danger'))) return
+        if (!(await confirmBox('¿Quitar del equipo?', `${p?.full_name} dejará de aparecer en este trabajo.`, 'Quitar del equipo', 'danger'))) return
         await write(sb.from('work_members').delete().eq('work_id', id).eq('person_id', el.dataset.delMember))
         await paint()
       }),
@@ -149,20 +149,20 @@ export async function work(root, id) {
       run(e.submitter, async () => {
         const row = { activity_id: act.id, person_id: person, work_id: id, source: 'admin' }
         await write(me.isAdmin ? sb.from('work_members').upsert(row, { onConflict: 'activity_id,person_id' }) : sb.from('work_members').insert(row))
-        toast('Integrante agregado.')
+        toast('Se agregó al equipo.')
         await paint()
       })
     })
     on('[data-leave]', 'click', (el) =>
       run(el, async () => {
-        if (!(await confirmBox('¿Salir de este equipo?', 'Dejas de aparecer en este trabajo.', 'Sí, salir'))) return
+        if (!(await confirmBox('¿Salir de este equipo?', 'Dejarás de aparecer en este trabajo.', 'Salir del equipo'))) return
         await rpc('leave_work', { p_work: id })
         go(`/a/${act.id}`)
       }),
     )
     on('[data-del-work]', 'click', (el) =>
       run(el, async () => {
-        if (!(await confirmBox('¿Eliminar este trabajo?', 'Se borra la ficha con sus piezas y su equipo. No se puede deshacer.', 'Sí, eliminar', 'danger'))) return
+        if (!(await confirmBox('¿Eliminar este trabajo?', 'Se borrará la ficha con sus archivos y su equipo. Esto no se puede deshacer.', 'Eliminar trabajo', 'danger'))) return
         await write(sb.from('works').delete().eq('id', id))
         go(`/a/${act.id}`)
       }),

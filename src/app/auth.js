@@ -45,7 +45,7 @@ export function login(root) {
   if (me.user) return afterLogin()
   const stop = frame(root, {
     kicker: 'Entrar',
-    title: 'Qué bueno verte',
+    title: 'Hola de nuevo',
     form: `
       <form class="form" data-form>
         ${field('Correo', 'email', { type: 'email', attrs: 'required autocomplete="email" autofocus' })}
@@ -54,7 +54,7 @@ export function login(root) {
       </form>
       <div class="auth-links">
         <a href="#/recuperar">Olvidé mi contraseña</a>
-        <p>¿Aún no tienes cuenta? Entra con el enlace de invitación de tu grupo.</p>
+        <p>¿Es tu primera vez? Abre el enlace de invitación que compartió tu grupo.</p>
       </div>`,
   })
   root.querySelector('[data-form]').addEventListener('submit', (e) => {
@@ -75,27 +75,27 @@ export async function join(root, code) {
   } catch (e) {
     const stop = frame(root, {
       kicker: 'Invitación',
-      title: 'Este enlace no funciona',
+      title: 'Este enlace ya no sirve',
       sub: esc(e.message),
-      form: `<a class="btn btn-block" href="#/entrar">Ir a entrar</a>`,
+      form: `<a class="btn btn-block" href="#/entrar">Iniciar sesión</a>`,
     })
     return stop
   }
   localStorage.setItem('liia.code', code)
   const admin = info.grants === 'admin'
   const stop = frame(root, {
-    kicker: admin ? 'Invitación de administración' : 'Invitación',
-    title: `Únete a ${info.generation.name}`,
-    sub: 'Crea tu cuenta una sola vez. Después entras con tu correo y contraseña.',
+    kicker: `${admin ? 'Invitación de administración' : 'Invitación'} · ${info.generation.name}`,
+    title: 'Crea tu cuenta',
+    sub: 'Solo tienes que hacerlo una vez. Después entras con tu correo y tu contraseña.',
     form: `
       <form class="form" data-form>
-        ${admin ? `<label class="check"><input type="checkbox" name="teacher" data-teacher /> <span>Soy docente (no tengo matrícula)</span></label>` : ''}
+        ${admin ? `<label class="check"><input type="checkbox" name="teacher" data-teacher /> <span>Soy docente y no tengo matrícula</span></label>` : ''}
         <div data-mat>${field('Matrícula', 'matricula', { attrs: 'inputmode="numeric" autocomplete="off" autofocus' })}
           <p class="hello" data-hello hidden></p></div>
         <div data-name hidden>${field('Nombre completo', 'name', { attrs: 'autocomplete="name"' })}</div>
         ${field('Correo', 'email', { type: 'email', attrs: 'required autocomplete="email"' })}
-        ${field('Contraseña', 'password', { type: 'password', hint: 'Mínimo 6 caracteres.', attrs: 'required minlength="6" autocomplete="new-password"' })}
-        <button class="btn btn-primary btn-block" type="submit">Crear mi cuenta ${icon.arrow}</button>
+        ${field('Contraseña', 'password', { type: 'password', hint: 'Al menos 6 caracteres.', attrs: 'required minlength="6" autocomplete="new-password"' })}
+        <button class="btn btn-primary btn-block" type="submit">Crear cuenta ${icon.arrow}</button>
       </form>
       <div class="auth-links"><a href="#/entrar">Ya tengo cuenta</a></div>`,
   })
@@ -115,9 +115,9 @@ export async function join(root, code) {
       hello.hidden = false
       hello.className = `hello ${r.person && !r.person.claimed ? 'is-ok' : 'is-bad'}`
       hello.textContent = !r.person
-        ? 'No encontramos esa matrícula en la lista del grupo.'
+        ? 'No encontramos esa matrícula en la lista. Revisa que esté bien escrita.'
         : r.person.claimed
-          ? `${r.person.name} ya tiene cuenta. Si eres tú, entra o recupera tu contraseña.`
+          ? `${r.person.name} ya tiene cuenta. Si eres tú, inicia sesión o recupera tu contraseña.`
           : `Hola, ${r.person.name}.`
     } catch {
       hello.hidden = true
@@ -140,7 +140,7 @@ export async function join(root, code) {
       const email = f.email.trim()
       await portal('join', { code, email, password: f.password, matricula: teacher ? '' : f.matricula.trim(), name: teacher ? f.name.trim() : '' })
       await signIn(email, f.password)
-      toast('Cuenta creada. Bienvenida, bienvenido.')
+      toast('Tu cuenta está lista.')
       afterLogin()
     })
   })
@@ -149,18 +149,18 @@ export async function join(root, code) {
 
 export function recover(root) {
   const stop = frame(root, {
-    kicker: 'Recuperar acceso',
-    title: 'Nueva contraseña',
-    sub: 'Confirma que eres tú con tu matrícula y el código de tu grupo. Si no lo tienes, cualquier administrador puede restablecerla.',
+    kicker: 'Recuperar contraseña',
+    title: 'Elige una nueva contraseña',
+    sub: 'Para confirmar que eres tú, necesitamos tu matrícula y el código de tu grupo. Si no tienes el código, pídele a un administrador que te la cambie.',
     form: `
       <form class="form" data-form>
         ${field('Correo', 'email', { type: 'email', attrs: 'required autocomplete="email" autofocus' })}
         ${field('Matrícula', 'matricula', { attrs: 'required inputmode="numeric" autocomplete="off"' })}
-        ${field('Código del grupo', 'code', { value: localStorage.getItem('liia.code') || '', hint: 'Es la última parte del enlace de invitación.', attrs: 'required autocomplete="off"' })}
+        ${field('Código del grupo', 'code', { value: localStorage.getItem('liia.code') || '', hint: 'Es la parte final del enlace de invitación.', attrs: 'required autocomplete="off"' })}
         ${field('Nueva contraseña', 'password', { type: 'password', attrs: 'required minlength="6" autocomplete="new-password"' })}
-        <button class="btn btn-primary btn-block" type="submit">Cambiar contraseña ${icon.arrow}</button>
+        <button class="btn btn-primary btn-block" type="submit">Guardar contraseña ${icon.arrow}</button>
       </form>
-      <div class="auth-links"><a href="#/entrar">Volver a entrar</a></div>`,
+      <div class="auth-links"><a href="#/entrar">Volver a iniciar sesión</a></div>`,
   })
   root.querySelector('[data-form]').addEventListener('submit', (e) => {
     e.preventDefault()
@@ -169,7 +169,7 @@ export function recover(root) {
       const code = f.code.trim().split('/').pop()
       await portal('recover', { code, email: f.email.trim(), matricula: f.matricula.trim(), password: f.password })
       await signIn(f.email.trim(), f.password)
-      toast('Contraseña cambiada.')
+      toast('Contraseña actualizada.')
       afterLogin()
     })
   })

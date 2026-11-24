@@ -57,7 +57,7 @@ export async function run(button, fn) {
     return await fn()
   } catch (e) {
     console.error(e)
-    toast(e.message || 'Algo falló.', 'error')
+    toast(e.message || 'Algo salió mal. Inténtalo de nuevo.', 'error')
   } finally {
     if (button && button.isConnected) {
       button.disabled = false
@@ -109,7 +109,7 @@ export function dialog({ title, body = '', actions = [{ label: 'Cerrar', value: 
   })
 }
 
-export const confirmBox = (title, text, ok = 'Sí, continuar', kind = 'primary') =>
+export const confirmBox = (title, text, ok = 'Continuar', kind = 'primary') =>
   dialog({ title, body: `<p class="dlg-text">${esc(text)}</p>`, actions: [{ label: 'Cancelar', value: false }, { label: ok, value: true, kind }] })
 
 export const field = (label, name, { type = 'text', value = '', hint = '', attrs = '' } = {}) => `
@@ -122,7 +122,7 @@ export const fmtSize = (n) => (n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.
 export const copyText = async (text) => {
   try {
     await navigator.clipboard.writeText(text)
-    toast('Copiado.')
+    toast('Enlace copiado.')
   } catch {
     prompt('Copia el enlace:', text)
   }

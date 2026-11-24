@@ -24,8 +24,8 @@ export async function portal(action, payload = {}) {
     },
     body: JSON.stringify({ action, ...payload }),
   })
-  const out = await res.json().catch(() => ({ ok: false, error: 'El servidor no respondió.' }))
-  if (!out.ok) throw new Error(out.error || 'Algo falló.')
+  const out = await res.json().catch(() => ({ ok: false, error: 'No pudimos conectar con el servidor. Inténtalo de nuevo.' }))
+  if (!out.ok) throw new Error(out.error || 'Algo salió mal. Inténtalo de nuevo.')
   return out
 }
 
@@ -56,7 +56,7 @@ export function pickGen(id) {
 
 export async function signIn(email, password) {
   const { error } = await sb.auth.signInWithPassword({ email, password })
-  if (error) throw new Error(/invalid/i.test(error.message) ? 'Correo o contraseña incorrectos.' : error.message)
+  if (error) throw new Error(/invalid/i.test(error.message) ? 'El correo o la contraseña no coinciden.' : error.message)
   return loadMe()
 }
 
@@ -130,7 +130,7 @@ export const urlOf = (path) => urls.get(path) || ''
 
 export async function upload(path, blob, contentType) {
   const { error } = await sb.storage.from(BUCKET).upload(path, blob, { contentType, upsert: true, cacheControl: '31536000' })
-  if (error && !/exists/i.test(error.message)) throw new Error(`No se pudo subir el archivo: ${error.message}`)
+  if (error && !/exists/i.test(error.message)) throw new Error(`No pudimos subir el archivo. ${error.message}`)
 }
 
 /** Sube archivo y miniatura (por huella: el mismo archivo nunca se guarda dos veces) y arma la pieza. */
