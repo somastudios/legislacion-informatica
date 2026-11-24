@@ -43,13 +43,17 @@ npm run build
 
 ## Estructura
 
-- `src/core/`: motor de la presentación, heredado de SOMA Studio. `deck` (escenas e iris), `dot` (el punto), `boil` (trazo a mano), `hud` (índice y navegación), `fx` (entradas reutilizables).
-- `src/show/`: la presentación. `scenes` arma las escenas con los datos, `viewer` muestra cada pieza, `player` monta la baraja.
+- `src/show/`: la presentación. `deck` (escenas y cambio entre ellas), `hud` (controles e índice), `scenes` (arma las escenas con los datos), `viewer` (muestra cada pieza), `player` (monta todo y escucha teclado y gestos).
 - `src/app/`: el taller. `auth` (entrar, unirse, recuperar), `home`, `activity`, `work`, `admin` e `import` (zip de Moodle).
-- `src/lib/`: `api` (Supabase), `match` (detección de duplicados), `files` (análisis de archivos en el navegador), `ui`.
-- `src/styles/`: `main.css` (tokens y base de la presentación), `scenes.css` (escenas), `app.css` (taller).
+- `src/lib/`: `api` (Supabase), `match` (detección de duplicados), `files` (análisis de archivos en el navegador), `fx` (movimiento), `ui`.
+- `src/styles/`: `base.css` (tokens, tipografía e identidad), `app.css` (taller), `show.css` (presentación).
+- `src/demo/`: modo demostración sin red (`VITE_DEMO=1`).
 - `supabase/migrations/`: esquema, permisos y RLS.
 - `supabase/functions/portal/`: cuentas (unirse con enlace, recuperar contraseña, acciones de administración).
+
+## Identidad
+
+La marca es el signo de sección (§) sobre un espectro de color; cada actividad toma uno de sus tonos. Tipografía del sistema (San Francisco en Apple, Inter en lo demás), grises neutros y vidrio esmerilado en los controles.
 
 ## Datos y privacidad
 

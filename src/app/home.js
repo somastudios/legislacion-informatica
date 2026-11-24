@@ -1,7 +1,7 @@
 // Inicio del taller: las actividades y, para cada una, mi trabajo.
 import { firstName, loadGen, me, workOf } from '../lib/api.js'
 import { esc, icon, pad } from '../lib/ui.js'
-import { cover, frame, names, thumb, withThumbs } from './parts.js'
+import { cover, frame, hueOf, names, thumb, withThumbs } from './parts.js'
 
 export async function home(root) {
   const main = frame(root, 'home')
@@ -20,7 +20,7 @@ export async function home(root) {
     <section class="hero">
       <div>
         <p class="t-label hero-k">${esc(data.gen.name)} · ${esc(data.gen.subject)}</p>
-        <h1 class="h-display">${student ? `Hola, ${esc(firstName(me.person))}` : 'El compendio'}<i class="pt"></i></h1>
+        <h1 class="h-display">${student ? `Hola, <span class="grad">${esc(firstName(me.person))}</span>.` : 'El <span class="grad">compendio</span>.'}</h1>
         <p class="hero-s">${
           student
             ? done === total
@@ -29,7 +29,7 @@ export async function home(root) {
             : 'Así va la recolección de trabajos del grupo.'
         }</p>
       </div>
-      ${student ? `<div class="meter" style="--p:${total ? done / total : 0}"><svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50"/><circle class="meter-arc" cx="60" cy="60" r="50" pathLength="1" transform="rotate(-90 60 60)"/></svg><b>${done}<small>/${total}</small></b><span class="t-label">actividades</span></div>` : ''}
+      ${student ? `<div class="meter" style="--p:${total ? done / total : 0}"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="meter-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7a3d"/><stop offset=".4" stop-color="#ff2d6f"/><stop offset=".75" stop-color="#9d4dff"/><stop offset="1" stop-color="#2f80ff"/></linearGradient></defs><circle cx="60" cy="60" r="50"/><circle class="meter-arc" cx="60" cy="60" r="50" pathLength="1" transform="rotate(-90 60 60)"/></svg><b>${done}<small>/${total}</small></b><span class="t-label">actividades</span></div>` : ''}
     </section>
     <ol class="acts">
       ${data.activities
@@ -37,8 +37,8 @@ export async function home(root) {
           const w = mine[i]
           const lead = w && w.leader_id === me.person?.id
           const withWork = new Set(a.works.flatMap((x) => x.members.map((m) => m.person_id))).size
-          return `<li><a class="act ${w ? 'has-work' : ''}" href="#/a/${a.id}">
-            <span class="act-n t-label">${pad(i + 1)}</span>
+          return `<li><a class="act ${w ? 'has-work' : ''}" href="#/a/${a.id}" style="--hue:${hueOf(i)}">
+            <span class="act-n">${pad(i + 1)}</span>
             <span class="act-body">
               <span class="t-label act-kind">${esc(a.label || a.kind)}</span>
               <span class="act-title">${esc(a.title)}</span>

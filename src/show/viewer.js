@@ -2,7 +2,7 @@
 import { pdfjs, viewerOf } from '../lib/files.js'
 import { signedUrls, urlOf } from '../lib/api.js'
 import { C } from '../content/es.js'
-import { pad } from '../core/fx.js'
+import { pad } from '../lib/fx.js'
 
 export function createViewer(host) {
   let token = 0
