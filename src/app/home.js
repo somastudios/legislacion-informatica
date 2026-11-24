@@ -50,7 +50,7 @@ export async function home(root) {
                   : `<span class="act-state"><span class="chip">${a.works.length} ${a.works.length === 1 ? 'trabajo' : 'trabajos'}</span><span class="act-team">${withWork} de ${students} con entrega</span></span>`
               }
             </span>
-            ${thumb(w ? cover(w) : a.works[0] && !student ? cover(a.works[0]) : null, 'act-thumb')}
+            ${thumb(w ? cover(w) : a.works[0] && !student ? cover(a.works[0]) : null, 'act-thumb', a)}
             <span class="act-go">${icon.arrow}</span>
           </a></li>`
         })

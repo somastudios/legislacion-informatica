@@ -1,12 +1,20 @@
 import gsap from 'gsap'
 
-// La baraja: una escena visible a la vez y una sola transición, el iris.
-// Avanzar abre el anillo desde donde está el punto; retroceder lo cierra sobre
-// el lugar al que el punto regresa.
+// La baraja: una escena visible a la vez. Tres tonos (tinta, blanco y azul) y
+// dos movimientos de cámara para pasar de una a otra:
+//
+//   barrido  una franja del tercer color cruza la pantalla en diagonal: tapa la
+//            escena que sale y destapa la que llega. Horizontal entre capítulos,
+//            vertical hacia los créditos.
+//   entrada  la cámara se mete en un elemento de la escena actual (una fila del
+//            índice), que crece hasta ser la escena siguiente. De regreso, se sale.
+//
+// El cursor viaja de un ancla a la otra durante el cambio y toma el color de la escena.
 
-const DURATION = 1.15
-const BAND = 1.26 // el borde del iris: un anillo con la proporción del logo
-const COLORS = { ink: '#050506', paper: '#efece4' }
+const COLORS = { ink: '#050506', paper: '#ffffff', blue: '#1d5bff' }
+const CURSOR = { ink: COLORS.blue, paper: COLORS.blue, blue: COLORS.ink }
+const third = (a, b) => ['blue', 'ink', 'paper'].find((c) => c !== a && c !== b)
+const SLANT = 16 // inclinación de la franja, en % del eje
 
 export function createDeck({ stage, band, dot, scenes, reduced, onChange }) {
   const n = scenes.length
@@ -59,8 +67,7 @@ export function createDeck({ stage, band, dot, scenes, reduced, onChange }) {
     const el = els[i]
     el.classList.remove('is-on')
     el.inert = true
-    el.style.clipPath = ''
-    el.style.zIndex = ''
+    gsap.set(el, { clearProps: 'clipPath,zIndex,transform,opacity' })
     apis[i].leave?.()
   }
 
@@ -80,12 +87,67 @@ export function createDeck({ stage, band, dot, scenes, reduced, onChange }) {
     gsap.delayedCall(delay, () => tl.play(0))
   }
 
+  // ── Barrido: la franja tapa y luego destapa. `axis` x|y, `dir` 1 avanza, -1 regresa. ──
+  function sweep(from, to, { axis, dir, color, done }) {
+    const outEl = els[from]
+    const inEl = els[to]
+    // Polígono con un borde inclinado. `a` es el borde que avanza, `b` el que se queda atrás (0–100 + SLANT).
+    const poly = (a, b) => {
+      const p = [
+        [a + SLANT, 0],
+        [b + SLANT, 0],
+        [b, 100],
+        [a, 100],
+      ].map(([u, v]) => {
+        const x = dir > 0 ? 100 - u : u
+        return axis === 'x' ? `${x}% ${v}%` : `${v}% ${x}%`
+      })
+      return `polygon(${p.join(',')})`
+    }
+    const shift = axis === 'x' ? 'xPercent' : 'yPercent'
+    const s = { cover: 0, reveal: 0 }
+    band.style.background = color
+    band.style.display = 'block'
+    gsap.set(inEl, { autoAlpha: 0 })
+    const render = () => (band.style.clipPath = poly(-SLANT + s.cover * (100 + SLANT), -SLANT + s.reveal * (100 + SLANT)))
+    render()
+    return gsap
+      .timeline({ onComplete: done })
+      .to(s, { cover: 1, duration: 0.62, ease: 'power3.in', onUpdate: render }, 0)
+      .to(outEl, { [shift]: -5 * dir, duration: 0.62, ease: 'power2.in' }, 0)
+      .add(() => {
+        gsap.set(outEl, { autoAlpha: 0 })
+        gsap.set(inEl, { autoAlpha: 1 })
+      })
+      .to(s, { reveal: 1, duration: 0.85, ease: 'expo.out', onUpdate: render })
+      .fromTo(inEl, { [shift]: 7 * dir }, { [shift]: 0, duration: 1, ease: 'expo.out' }, '<')
+  }
+
+  // ── Entrada: la escena nueva nace del rectángulo de `portal` (o se recoge en él al regresar). ──
+  function push(from, to, { portal, dir, done }) {
+    const r = portal.getBoundingClientRect()
+    const box = `inset(${r.top}px ${innerWidth - r.right}px ${innerHeight - r.bottom}px ${r.left}px round ${Math.min(r.height, 36)}px)`
+    const full = 'inset(0px 0px 0px 0px round 0px)'
+    const top = els[dir > 0 ? to : from]
+    const under = els[dir > 0 ? from : to]
+    gsap.set(top, { zIndex: 3 })
+    const tl = gsap.timeline({ onComplete: done })
+    if (dir > 0) {
+      tl.fromTo(top, { clipPath: box }, { clipPath: full, duration: 1.15, ease: 'expo.inOut' }, 0)
+      tl.to(under, { scale: 1.08, opacity: 0.35, duration: 1.15, ease: 'expo.inOut' }, 0)
+    } else {
+      tl.fromTo(top, { clipPath: full }, { clipPath: box, duration: 1.05, ease: 'expo.inOut' }, 0)
+      tl.fromTo(under, { scale: 1.08, opacity: 0.35 }, { scale: 1, opacity: 1, duration: 1.05, ease: 'expo.inOut' }, 0)
+    }
+    return tl
+  }
+
   function go(i, { instant = false } = {}) {
     if (busy || i === index || i < 0 || i >= n) return false
     const from = index
     const dir = from < 0 || i > from ? 1 : -1
     const api = apis[i]
-    const inEl = els[i]
+    const theme = scenes[i].theme
 
     activate(i)
     api.reset?.(dir)
@@ -97,70 +159,58 @@ export function createDeck({ stage, band, dot, scenes, reduced, onChange }) {
     const target = dot.measure(api.anchor())
     tl.progress(0, true).pause()
 
-    // Primera carga: el punto nace en su sitio.
+    // Primera carga: el cursor nace en su sitio.
     if (from < 0) {
+      gsap.set(dot.el, { color: CURSOR[theme] })
       if (reduced) {
-        dot.snap(api.anchor())
         tl.progress(1)
         dot.snap(api.anchor())
         return true
       }
-      dot.set({ x: target.x, y: target.y, d: 0 })
-      dot.to(api.anchor(), { to: target, duration: 1.3, ease: 'expo.out', delay: 0.15 })
+      dot.set({ x: target.x, y: target.y, w: 0, h: 0 })
+      dot.to(api.anchor(), { to: target, duration: 1.2, ease: 'expo.out', delay: 0.5 })
       tl.play(0)
       return true
     }
 
-    // Cambio bajo el índice: quien llama se encarga del punto y de la entrada.
+    // Cambio bajo el índice: quien llama se encarga del cursor y de la entrada.
     if (instant) {
       deactivate(from)
+      dot.tint(CURSOR[theme])
       return true
     }
 
     if (reduced) {
       deactivate(from)
       tl.progress(1)
+      gsap.set(dot.el, { color: CURSOR[theme] })
       dot.snap(api.anchor())
       return true
     }
 
     busy = true
-    const c = dir > 0 ? { x: dot.state.x, y: dot.state.y } : { x: target.x, y: target.y }
-    const R = Math.hypot(Math.max(c.x, innerWidth - c.x), Math.max(c.y, innerHeight - c.y)) + 4
-    const outEl = els[from]
-    const top = dir > 0 ? inEl : outEl
-    const bottom = dir > 0 ? outEl : inEl
-    top.style.zIndex = 3
-    bottom.style.zIndex = 1
-
-    // Entre escenas del mismo tono el borde contrasta; entre tonos distintos
-    // toma el color que llega, y el color entra antes que el contenido.
-    const same = scenes[i].theme === scenes[from].theme
-    band.style.background = COLORS[same ? (scenes[i].theme === 'ink' ? 'paper' : 'ink') : scenes[i].theme]
-    band.style.display = 'block'
-
-    const p = { r: dir > 0 ? 0 : R }
-    const at = `at ${c.x.toFixed(1)}px ${c.y.toFixed(1)}px`
-    const render = () => {
-      top.style.clipPath = `circle(${p.r.toFixed(1)}px ${at})`
-      band.style.clipPath = `circle(${(p.r * BAND).toFixed(1)}px ${at})`
+    const done = () => {
+      deactivate(from)
+      gsap.set(els[i], { clearProps: 'clipPath,zIndex,transform,opacity,visibility' })
+      band.style.display = 'none'
+      busy = false
     }
-    render()
-    gsap.to(p, {
-      r: dir > 0 ? R : 0,
-      duration: DURATION,
-      ease: 'expo.inOut',
-      onUpdate: render,
-      onComplete() {
-        deactivate(from)
-        inEl.style.clipPath = ''
-        inEl.style.zIndex = ''
-        band.style.display = 'none'
-        busy = false
-      },
-    })
-    dot.to(api.anchor(), { to: target, duration: DURATION, ease: 'expo.inOut' })
-    gsap.delayedCall(DURATION * (dir > 0 ? 0.46 : 0.34), () => tl.play(0))
+    // El movimiento lo define la escena de más adelante: así ir y volver son el mismo, invertido.
+    const move = Math.abs(i - from) === 1 ? scenes[Math.max(i, from)].move : null
+    const portal = move?.type === 'push' ? apis[Math.min(i, from)].portal?.(Math.max(i, from)) : null
+    let total
+    if (portal) {
+      push(from, i, { portal, dir, done })
+      total = 1.15
+      gsap.delayedCall(dir > 0 ? 0.55 : 0.4, () => tl.play(0))
+    } else {
+      const a = scenes[from].theme
+      sweep(from, i, { axis: move?.axis || 'x', dir, color: COLORS[a === theme ? (a === 'blue' ? 'ink' : 'blue') : third(a, theme)], done })
+      total = 1.47
+      gsap.delayedCall(0.72, () => tl.play(0))
+    }
+    dot.to(api.anchor(), { to: target, duration: total, ease: 'expo.inOut' })
+    dot.tint(CURSOR[theme], total * 0.6)
     return true
   }
 

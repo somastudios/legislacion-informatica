@@ -1,15 +1,15 @@
 /* El taller: la parte donde se sube y se organiza. Papel, tinta y un solo acento azul. */
 
 :root {
-  --paper: #efece4;
-  --card: #faf8f3;
+  --paper: #ffffff;
+  --card: #f4f5f8;
   --ink: #050506;
   --ink-2: rgb(5 5 6 / 0.66);
   --ink-3: rgb(5 5 6 / 0.42);
   --line: rgb(5 5 6 / 0.12);
   --line-2: rgb(5 5 6 / 0.07);
-  --blue: #216fff;
-  --blue-soft: rgb(33 111 255 / 0.1);
+  --blue: #1d5bff;
+  --blue-soft: rgb(29 91 255 / 0.1);
   --red: #c8321e;
   --r-lg: 26px;
   --r-md: 18px;
@@ -63,7 +63,7 @@ html:not(.is-show) body {
   align-items: center;
   gap: 20px;
   padding: 12px clamp(16px, 4vw, 40px);
-  background: rgb(239 236 228 / 0.86);
+  background: rgb(255 255 255 / 0.86);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--line-2);
 }
@@ -77,9 +77,25 @@ html:not(.is-show) body {
   white-space: nowrap;
 }
 
-.brand svg {
-  width: 30px;
-  height: 30px;
+/* La marca: el signo de sección dibujado a mano y el cursor. */
+.mk {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+}
+
+.mk .glyph {
+  width: 22px;
+  height: 28px;
+}
+
+.mk i {
+  width: 7px;
+  height: 17px;
+  margin-bottom: 3px;
+  background: var(--blue);
+  animation: blink 1.15s step-end infinite;
 }
 
 .brand b {
@@ -189,8 +205,8 @@ html:not(.is-show) body {
 }
 
 .btn-primary:hover {
-  background: #1458dc;
-  border-color: #1458dc;
+  background: #0f47e0;
+  border-color: #0f47e0;
 }
 
 .btn-ink {
@@ -285,11 +301,11 @@ html:not(.is-show) body {
 
 .pt {
   display: inline-block;
-  width: 0.2em;
-  height: 0.2em;
-  margin-left: 0.06em;
-  border-radius: 50%;
+  width: 0.3em;
+  height: 0.7em;
+  margin-left: 0.09em;
   background: var(--blue);
+  animation: blink 1.15s step-end infinite;
 }
 
 .h1 {
@@ -644,7 +660,7 @@ form.row select {
   aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: var(--r-sm);
-  background: #e4e0d5;
+  background: #e6e8ee;
   color: var(--ink-3);
 }
 
@@ -678,6 +694,12 @@ form.row select {
 .thumb.is-empty .ic {
   width: 26px;
   height: 26px;
+}
+
+.thumb .glyph {
+  width: 46%;
+  height: auto;
+  color: var(--ink);
 }
 
 .thumb.is-empty b {
@@ -1378,34 +1400,16 @@ textarea {
   color: var(--fg-2);
 }
 
-.auth-logo {
+.auth-mark {
   position: absolute;
-  right: -9%;
-  top: 8%;
-  width: min(62%, 60vh);
+  right: -8%;
+  top: 4%;
+  width: min(64%, 62vh);
   aspect-ratio: 1;
 }
 
-.auth-logo svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.auth-ring {
-  stroke-width: 20.5;
-  stroke-linecap: butt;
-}
-
-.auth-dot {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 36%;
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  border-radius: 50%;
-  background: var(--color-blue);
+.auth-pt {
+  background: var(--color-ink);
 }
 
 .auth-h {
@@ -1501,9 +1505,9 @@ textarea {
     min-height: 42dvh;
   }
 
-  .auth-logo {
-    width: 52%;
-    top: 6%;
+  .auth-mark {
+    width: 46%;
+    top: 2%;
   }
 
   .auth-panel {
